@@ -13,7 +13,6 @@ async function main() {
     '0x326C977E6efc84E512bB9C30f76E30c160eD06FB', // LINK token address
     '0x6e75b569a01ef56d18cab6a8e71e6600d6ce853834d4a5748b720d06f878b3a4', // Key Hash
     BigNumber.from('100000000000000').toNumber() // Fee
-
   )
 
   console.log('BattleRoyale deployed to:', chainlinkBattle.address)
