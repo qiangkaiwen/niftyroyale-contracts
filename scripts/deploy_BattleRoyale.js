@@ -1,5 +1,5 @@
 const hre = require('hardhat')
-const { BN } = require('web3-utils')
+const { BigNumber } = require('ethers')
 
 async function main() {
   const [deployer] = await ethers.getSigners()
@@ -11,13 +11,13 @@ async function main() {
   const battleRoyale = await BattleRoyale.deploy(
     'Nifty Royale X Tester: Nifty Royale NFT',
     'TVBR',
-    new BN('1000000000000000'),
+    BigNumber.from('1000000000000000').toNumber(),
     5,
     100,
     'QmPS3DjUdXZAFXq3SgDPqHapnqQqWqd25VX87Ri4dWTkxE',
     'Qmdy4U4V9JHoFgN4uQ7st9ZDrN7KGf2bZ6fe99kw8kASrQ',
     'https://niftyroyale.mypinata.cloud/ipfs/',
-    new BN('2556100800')
+    BigNumber.from('2556100800').toNumber()
   )
 
   console.log('BattleRoyale deployed to:', battleRoyale.address)
