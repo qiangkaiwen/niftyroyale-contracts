@@ -37,9 +37,6 @@ module.exports = {
     currency: 'USD',
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
-  },
-  polygonscan: {
     apiKey: process.env.POLYGONSCAN_API_KEY,
   },
 }
