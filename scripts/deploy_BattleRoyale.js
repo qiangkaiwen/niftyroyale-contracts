@@ -14,8 +14,8 @@ async function main() {
     BigNumber.from('1000000000000000').toNumber(),
     5,
     100,
-    'QmY3UDrDJUsjqH2QZYhxiaDcLZA36uhUARjhGCDW7YnbpH',
-    'QmeJoy42iK45FsQqVLdrUXppSYAmu4fxgvLPy9NyBdNmNn',
+    'QmYNos2rzCqF2irSVHztG51jUhkntjLB5Mwrs6YKWDpUja',
+    'QmakaGvsXVUb5Eb2X25geEZkggE4WBKdidbnfb74P23dJr',
     'https://niftyroyale.mypinata.cloud/ipfs/',
     BigNumber.from('2556100800').toNumber()
   )
