@@ -9,15 +9,15 @@ async function main() {
 
   const BattleRoyale = await hre.ethers.getContractFactory('BattleRoyale')
   const battleRoyale = await BattleRoyale.deploy(
-    'Nifty Royale X Tester: Nifty Royale NFT',
-    'TVBR',
-    BigNumber.from('1000000000000000').toNumber(),
-    5,
-    100,
+    'Nifty Royale X Testing: Nifty Royale NFT',
+    'TVNRBR',
+    BigNumber.from('200000000000000000').toNumber(),
+    3,
+    30,
     'QmYNos2rzCqF2irSVHztG51jUhkntjLB5Mwrs6YKWDpUja',
     'QmakaGvsXVUb5Eb2X25geEZkggE4WBKdidbnfb74P23dJr',
     'https://niftyroyale.mypinata.cloud/ipfs/',
-    BigNumber.from('2556100800').toNumber()
+    BigNumber.from('1639344000').toNumber()
   )
 
   console.log('BattleRoyale deployed to:', battleRoyale.address)
