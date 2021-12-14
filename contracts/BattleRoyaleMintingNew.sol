@@ -183,14 +183,15 @@ contract BattleRoyaleMintingNew is ERC721URIStorage, Ownable {
     require(battleState == BATTLE_STATE.RUNNING, 'BattleRoyale: Battle is not started');
     battleState = BATTLE_STATE.ENDED;
 
-    address winnerAddress = ownerOf(_winnerTokenId);
     uint256 tokenId = totalSupply + 1;
+
+    address winnerAddress = ownerOf(_winnerTokenId);
     _safeMint(winnerAddress, tokenId);
 
     string memory tokenURI = string(abi.encodePacked(baseURI, prizeTokenURI));
-    _setTokenURI(_winnerTokenId, tokenURI);
+    _setTokenURI(tokenId, tokenURI);
 
-    emit BattleEnded(address(this), _winnerTokenId, prizeTokenURI);
+    emit BattleEnded(address(this), tokenId, prizeTokenURI);
   }
 
   /**
