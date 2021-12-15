@@ -122,14 +122,13 @@ contract ChainlinkBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface 
   {
     for (uint256 i = 0; i < battleQueue.length; i++) {
       BattleInfo memory battle = battleQueue[i];
-      if (
+
+      return (
         battle.battleState == true &&
-        block.timestamp >= battle.lastEliminatedTime + (battle.intervalTime * 1 minutes)
-      ) {
-        return (true, abi.encodePacked(i));
-      }
+          block.timestamp == battle.lastEliminatedTime + (battle.intervalTime * 1 minutes),
+        abi.encodePacked(i)
+      );
     }
-    return (false, _checkData);
   }
 
   /**
@@ -137,7 +136,14 @@ contract ChainlinkBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface 
    * @param _performData is the data which was passed back from the checkData simulation.
    */
   function performUpkeep(bytes calldata _performData) external override {
-    uint256 battleId = bytesToUint256(_performData, 0);
+    uint256 battleId = abi.decode(_performData);
+    BattleInfo memory battle = battleQueue[battleId];
+
+    require(battle.battleState, "ChainlinkKeeper: Current battle is finished");
+    require(
+      block.timestamp == battle.lastEliminatedTime + (battle.intervalTime * 1 minutes),
+      "ChainlinkKeeper: Not trigger time"
+    );
     executeBattle(battleId);
   }
 
