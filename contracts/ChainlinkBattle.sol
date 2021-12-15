@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
-import '@chainlink/contracts/src/v0.8/VRFConsumerBase.sol';
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
-import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import '@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol';
-import 'hardhat/console.sol';
+import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
+import "hardhat/console.sol";
 
 contract ChainlinkBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface {
   using SafeERC20 for IERC20;
@@ -148,8 +148,8 @@ contract ChainlinkBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface 
   function executeBattle(uint256 _battleId) internal {
     BattleInfo storage battle = battleQueue[_battleId];
 
-    require(LINK.balanceOf(address(this)) >= fee, 'ChainlinkKeeper: Not enough LINK');
-    require(battle.battleState, 'ChainlinkKeeper: Current battle is finished');
+    require(LINK.balanceOf(address(this)) >= fee, "ChainlinkKeeper: Not enough LINK");
+    require(battle.battleState, "ChainlinkKeeper: Current battle is finished");
 
     bytes32 requestId = requestRandomness(keyHash, fee);
     requestToBattle[requestId] = _battleId;
@@ -253,7 +253,7 @@ contract ChainlinkBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface 
    */
   function withdrawETH(uint256 _amount) external onlyOwner {
     uint256 balance = address(this).balance;
-    require(_amount <= balance, 'ChainlinkKeeper: Out of balance');
+    require(_amount <= balance, "ChainlinkKeeper: Out of balance");
 
     payable(msg.sender).transfer(_amount);
 
@@ -269,7 +269,7 @@ contract ChainlinkBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface 
     IERC20 token = IERC20(_tokenAddr);
 
     uint256 balance = token.balanceOf(address(this));
-    require(_amount <= balance, 'ChainlinkKeeper: Out of balance');
+    require(_amount <= balance, "ChainlinkKeeper: Out of balance");
 
     token.safeTransfer(msg.sender, _amount);
 
@@ -282,7 +282,7 @@ contract ChainlinkBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface 
    * @param _start Start index
    */
   function bytesToUint256(bytes memory _bytes, uint256 _start) internal pure returns (uint256) {
-    require(_bytes.length >= _start + 32, 'ChainlinkKeeper: toUint256_outOfBounds');
+    require(_bytes.length >= _start + 32, "ChainlinkKeeper: toUint256_outOfBounds");
     uint256 tempUint;
 
     assembly {

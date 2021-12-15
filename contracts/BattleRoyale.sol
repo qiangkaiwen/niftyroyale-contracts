@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
-import '@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol';
-import '@openzeppelin/contracts/utils/Strings.sol';
-import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
-import 'hardhat/console.sol';
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol";
 
 contract BattleRoyale is ERC721URIStorage, Ownable {
   using SafeERC20 for IERC20;
@@ -113,23 +113,23 @@ contract BattleRoyale is ERC721URIStorage, Ownable {
    * @param _amount Token amount to buy
    */
   function purchase(uint256 _amount) external payable {
-    require(price > 0, 'BattleRoyale: Token price is zero');
+    require(price > 0, "BattleRoyale: Token price is zero");
     require(
       battleState == BATTLE_STATE.STANDBY,
-      'BattleRoyale: Current battle state is not ready to purchase tokens'
+      "BattleRoyale: Current battle state is not ready to purchase tokens"
     );
     require(
       maxSupply > 0 && totalSupply < maxSupply,
-      'BattleRoyale: The NFTs you attempted to purchase is now sold out'
+      "BattleRoyale: The NFTs you attempted to purchase is now sold out"
     );
-    require(block.timestamp >= startingTime, 'BattleRoyale: Not time to purchase');
+    require(block.timestamp >= startingTime, "BattleRoyale: Not time to purchase");
 
     if (msg.sender != owner()) {
       require(
         _amount <= maxSupply - totalSupply && _amount > 0 && _amount <= unitsPerTransaction,
-        'BattleRoyale: Out range of token amount'
+        "BattleRoyale: Out range of token amount"
       );
-      require(bytes(defaultTokenURI).length > 0, 'BattleRoyale: Default token URI is not set');
+      require(bytes(defaultTokenURI).length > 0, "BattleRoyale: Default token URI is not set");
       require(
         msg.value >= (price * _amount),
         "BattleRoyale: Caller hasn't got enough ETH for buying tokens"
@@ -168,7 +168,7 @@ contract BattleRoyale is ERC721URIStorage, Ownable {
   function startBattle() external onlyOwner {
     require(
       bytes(prizeTokenURI).length > 0 && inPlay.length > 1,
-      'BattleRoyale: Tokens in game are not enough to play'
+      "BattleRoyale: Tokens in game are not enough to play"
     );
     battleState = BATTLE_STATE.RUNNING;
 
@@ -180,7 +180,7 @@ contract BattleRoyale is ERC721URIStorage, Ownable {
    * @param _winnerTokenId Winner token Id in battle
    */
   function endBattle(uint256 _winnerTokenId) external onlyOwner {
-    require(battleState == BATTLE_STATE.RUNNING, 'BattleRoyale: Battle is not started');
+    require(battleState == BATTLE_STATE.RUNNING, "BattleRoyale: Battle is not started");
     battleState = BATTLE_STATE.ENDED;
 
     string memory tokenURI = string(abi.encodePacked(baseURI, prizeTokenURI));
@@ -260,7 +260,7 @@ contract BattleRoyale is ERC721URIStorage, Ownable {
    */
   function withdrawETH(uint256 _amount) external onlyOwner {
     uint256 balance = address(this).balance;
-    require(_amount <= balance, 'BattleRoyale: Out of balance');
+    require(_amount <= balance, "BattleRoyale: Out of balance");
 
     payable(msg.sender).transfer(_amount);
 
@@ -276,7 +276,7 @@ contract BattleRoyale is ERC721URIStorage, Ownable {
     IERC20 token = IERC20(_tokenAddr);
 
     uint256 balance = token.balanceOf(address(this));
-    require(_amount <= balance, 'BattleRoyale: Out of balance');
+    require(_amount <= balance, "BattleRoyale: Out of balance");
 
     token.safeTransfer(msg.sender, _amount);
 
