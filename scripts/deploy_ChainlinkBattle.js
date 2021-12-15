@@ -15,7 +15,7 @@ async function main() {
     BigNumber.from('100000000000000').toBigInt() // Fee
   )
 
-  console.log('BattleRoyale deployed to:', chainlinkBattle.address)
+  console.log('ChainlinkBattle deployed to:', chainlinkBattle.address)
 }
 
 main().catch((error) => {
