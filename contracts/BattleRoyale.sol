@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 
-contract BattleRoyale is ERC721URIStorage, Ownable {
+contract BattleRoyaleTempName is ERC721URIStorage, Ownable {
   using SafeERC20 for IERC20;
   using Strings for uint256;
 
