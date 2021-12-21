@@ -29,6 +29,9 @@ contract BattleRoyaleRandomPartPart is ERC721URIStorage, Ownable {
   /// @notice Event emitted when battle has ended.
   event BattleEnded(address battleAddress, uint256 winnerTokenId, string prizeTokenURI);
 
+  /// @notice Event emitted when base token uri set.
+  event BaseURISet(string baseURI);
+
   /// @notice Event emitted when token URIs has added.
   event TokenURIAdded(string tokenURI, uint256 count);
 
@@ -36,7 +39,7 @@ contract BattleRoyaleRandomPartPart is ERC721URIStorage, Ownable {
   event TokenURICountUpdated(string tokenURI, uint256 count);
 
   /// @notice Event emitted when token URI has removed.
-  event TokenURIRemoved(uint256 index, string[] tokenURIs);
+  event TokenURIRemoved(uint256 index, string[] defaultTokenURIs);
 
   /// @notice Event emitted when prize token uri set.
   event PrizeTokenURISet(string prizeTokenURI);
@@ -62,8 +65,8 @@ contract BattleRoyaleRandomPartPart is ERC721URIStorage, Ownable {
   BATTLE_STATE public battleState;
 
   string public prizeTokenURI;
-  string[] public tokenURIs;
-
+  string[] public defaultTokenURIs;
+  string public baseURI;
   uint256 public price;
   uint256 public maxSupply;
   uint256 public totalSupply;
@@ -81,19 +84,30 @@ contract BattleRoyaleRandomPartPart is ERC721URIStorage, Ownable {
    * @param _price Token price
    * @param _unitsPerTransaction Purchasable token amounts per transaction
    * @param _maxSupply Maximum number of mintable tokens
+   * @param _defaultTokenURIs Deafult token uris
+   * @param _prizeTokenURI Prize token uri
+   * @param _baseURI Base token uri
+   * @param _startingTime Start time to purchase NFT
    */
   constructor(
     string memory _name,
     string memory _symbol,
     uint256 _price,
     uint256 _unitsPerTransaction,
-    uint256 _maxSupply
+    uint256 _maxSupply,
+    string[] memory _defaultTokenURIs,
+    string memory _prizeTokenURI,
+    string memory _baseURI,
+    uint256 _startingTime
   ) ERC721(_name, _symbol) {
     battleState = BATTLE_STATE.STANDBY;
     price = _price;
     unitsPerTransaction = _unitsPerTransaction;
     maxSupply = _maxSupply;
-
+    defaultTokenURIs = _defaultTokenURIs;
+    prizeTokenURI = _prizeTokenURI;
+    baseURI = _baseURI;
+    startingTime = _startingTime;
     emit BattleRoyaleRandomPartDeployed();
   }
 
@@ -132,17 +146,17 @@ contract BattleRoyaleRandomPartPart is ERC721URIStorage, Ownable {
 
       uint256 index = uint256(
         keccak256(abi.encode(i, _amount, block.timestamp, msg.sender, tokenId))
-      ) % tokenURIs.length;
+      ) % defaultTokenURIs.length;
 
-      string memory tokenURI = tokenURIs[index];
+      string memory tokenURI = string(abi.encodePacked(baseURI, defaultTokenURIs[index]));
 
       _setTokenURI(tokenId, tokenURI);
 
       tokenURICount[tokenURI]--;
 
       if (tokenURICount[tokenURI] == 0) {
-        tokenURIs[index] = tokenURIs[tokenURIs.length - 1];
-        tokenURIs.pop();
+        defaultTokenURIs[index] = defaultTokenURIs[defaultTokenURIs.length - 1];
+        defaultTokenURIs.pop();
       }
 
       inPlay.push(uint32(tokenId));
@@ -183,9 +197,25 @@ contract BattleRoyaleRandomPartPart is ERC721URIStorage, Ownable {
     require(battleState == BATTLE_STATE.RUNNING, "BattleRoyaleRandomPart: Battle is not started");
     battleState = BATTLE_STATE.ENDED;
 
-    _setTokenURI(_winnerTokenId, prizeTokenURI);
+    uint256 tokenId = totalSupply + 1;
 
-    emit BattleEnded(address(this), _winnerTokenId, prizeTokenURI);
+    address winnerAddress = ownerOf(_winnerTokenId);
+    _safeMint(winnerAddress, tokenId);
+
+    string memory tokenURI = string(abi.encodePacked(baseURI, prizeTokenURI));
+    _setTokenURI(tokenId, tokenURI);
+
+    emit BattleEnded(address(this), tokenId, prizeTokenURI);
+  }
+
+  /**
+   * @dev External function to set the base token URI. This function can be called only by owner.
+   * @param _newBaseURI New base token uri
+   */
+  function setBaseURI(string memory _newBaseURI) external onlyOwner {
+    baseURI = _newBaseURI;
+
+    emit BaseURISet(baseURI);
   }
 
   /**
@@ -194,7 +224,7 @@ contract BattleRoyaleRandomPartPart is ERC721URIStorage, Ownable {
    * @param _count Token uri count
    */
   function addTokenURI(string memory _tokenURI, uint256 _count) external onlyOwner {
-    tokenURIs.push(_tokenURI);
+    defaultTokenURIs.push(_tokenURI);
     tokenURICount[_tokenURI] = _count;
 
     emit TokenURIAdded(_tokenURI, _count);
@@ -216,10 +246,10 @@ contract BattleRoyaleRandomPartPart is ERC721URIStorage, Ownable {
    * @param _index Index of token uri
    */
   function removeTokenURI(uint256 _index) external onlyOwner {
-    tokenURIs[_index] = tokenURIs[tokenURIs.length - 1];
-    tokenURIs.pop();
+    defaultTokenURIs[_index] = defaultTokenURIs[defaultTokenURIs.length - 1];
+    defaultTokenURIs.pop();
 
-    emit TokenURIRemoved(_index, tokenURIs);
+    emit TokenURIRemoved(_index, defaultTokenURIs);
   }
 
   /**
