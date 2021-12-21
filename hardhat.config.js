@@ -4,6 +4,7 @@ require("@nomiclabs/hardhat-etherscan")
 require("@nomiclabs/hardhat-waffle")
 require("hardhat-gas-reporter")
 require("solidity-coverage")
+require("hardhat-contract-sizer")
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -38,5 +39,10 @@ module.exports = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+  },
+  contractSizer: {
+    alphaSort: true,
+    runOnCompile: true,
+    disambiguatePaths: false,
   },
 }
