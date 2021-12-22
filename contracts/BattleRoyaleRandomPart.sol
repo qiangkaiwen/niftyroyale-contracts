@@ -83,7 +83,6 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
    * @param _symbol Token symbol
    * @param _price Token price
    * @param _unitsPerTransaction Purchasable token amounts per transaction
-   * @param _maxSupply Maximum number of mintable tokens
    * @param _prizeTokenURI Prize token uri
    * @param _baseURI Base token uri
    * @param _startingTime Start time to purchase NFT
@@ -93,7 +92,6 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
     string memory _symbol,
     uint256 _price,
     uint256 _unitsPerTransaction,
-    uint256 _maxSupply,
     string memory _prizeTokenURI,
     string memory _baseURI,
     uint256 _startingTime
@@ -101,7 +99,6 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
     battleState = BATTLE_STATE.STANDBY;
     price = _price;
     unitsPerTransaction = _unitsPerTransaction;
-    maxSupply = _maxSupply;
     prizeTokenURI = _prizeTokenURI;
     baseURI = _baseURI;
     startingTime = _startingTime;
@@ -209,6 +206,7 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
   function addTokenURI(string memory _tokenURI, uint256 _count) external onlyOwner {
     defaultTokenURIs.push(_tokenURI);
     tokenURICount[_tokenURI] = _count;
+    maxSupply += _count;
 
     emit TokenURIAdded(_tokenURI, _count);
   }
@@ -219,6 +217,7 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
    * @param _count Token uri count
    */
   function updateTokenURICount(string memory _tokenURI, uint256 _count) external onlyOwner {
+    maxSupply = maxSupply - tokenURICount[_tokenURI] + _count;
     tokenURICount[_tokenURI] = _count;
 
     emit TokenURICountUpdated(_tokenURI, _count);
@@ -229,6 +228,8 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
    * @param _index Index of token uri
    */
   function removeTokenURI(uint256 _index) external onlyOwner {
+    maxSupply -= tokenURICount[defaultTokenURIs[_index]];
+    delete tokenURICount[defaultTokenURIs[_index]];
     defaultTokenURIs[_index] = defaultTokenURIs[defaultTokenURIs.length - 1];
     defaultTokenURIs.pop();
 
@@ -263,16 +264,6 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
     unitsPerTransaction = _unitsPerTransaction;
 
     emit UnitsPerTransactionSet(unitsPerTransaction);
-  }
-
-  /**
-   * @dev External function to set max supply. This function can be called only by owner.
-   * @param _maxSupply New maximum token amounts
-   */
-  function setMaxSupply(uint256 _maxSupply) external onlyOwner {
-    maxSupply = _maxSupply;
-
-    emit MaxSupplySet(maxSupply);
   }
 
   /**
