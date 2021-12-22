@@ -39,7 +39,7 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
   event TokenURICountUpdated(string tokenURI, uint256 count);
 
   /// @notice Event emitted when token URI has removed.
-  event TokenURIRemoved(uint256 index, string[] defaultTokenURIs);
+  event TokenURIRemoved(uint256 index, string[] defaultTokenURI);
 
   /// @notice Event emitted when prize token uri set.
   event PrizeTokenURISet(string prizeTokenURI);
@@ -65,7 +65,7 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
   BATTLE_STATE public battleState;
 
   string public prizeTokenURI;
-  string[] public defaultTokenURIs;
+  string[] public defaultTokenURI;
   string public baseURI;
   uint256 public price;
   uint256 public maxSupply;
@@ -131,17 +131,17 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
 
       uint256 index = uint256(
         keccak256(abi.encode(i, _amount, block.timestamp, msg.sender, tokenId))
-      ) % defaultTokenURIs.length;
+      ) % defaultTokenURI.length;
 
-      string memory tokenURI = string(abi.encodePacked(baseURI, defaultTokenURIs[index]));
+      string memory tokenURI = string(abi.encodePacked(baseURI, defaultTokenURI[index]));
 
       _setTokenURI(tokenId, tokenURI);
 
       tokenURICount[tokenURI]--;
 
       if (tokenURICount[tokenURI] == 0) {
-        defaultTokenURIs[index] = defaultTokenURIs[defaultTokenURIs.length - 1];
-        defaultTokenURIs.pop();
+        defaultTokenURI[index] = defaultTokenURI[defaultTokenURI.length - 1];
+        defaultTokenURI.pop();
       }
 
       inPlay.push(uint32(tokenId));
@@ -204,7 +204,7 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
    * @param _count Token uri count
    */
   function addTokenURI(string memory _tokenURI, uint256 _count) external onlyOwner {
-    defaultTokenURIs.push(_tokenURI);
+    defaultTokenURI.push(_tokenURI);
     tokenURICount[_tokenURI] = _count;
     maxSupply += _count;
 
@@ -228,12 +228,12 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
    * @param _index Index of token uri
    */
   function removeTokenURI(uint256 _index) external onlyOwner {
-    maxSupply -= tokenURICount[defaultTokenURIs[_index]];
-    delete tokenURICount[defaultTokenURIs[_index]];
-    defaultTokenURIs[_index] = defaultTokenURIs[defaultTokenURIs.length - 1];
-    defaultTokenURIs.pop();
+    maxSupply -= tokenURICount[defaultTokenURI[_index]];
+    delete tokenURICount[defaultTokenURI[_index]];
+    defaultTokenURI[_index] = defaultTokenURI[defaultTokenURI.length - 1];
+    defaultTokenURI.pop();
 
-    emit TokenURIRemoved(_index, defaultTokenURIs);
+    emit TokenURIRemoved(_index, defaultTokenURI);
   }
 
   /**
