@@ -133,11 +133,11 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
         keccak256(abi.encode(i, _amount, block.timestamp, msg.sender, tokenId))
       ) % defaultTokenURI.length;
 
-      string memory tokenURI = defaultTokenURI[index];
+      string memory tokenURI = string(abi.encodePacked(baseURI, defaultTokenURI[index]));
 
       _setTokenURI(tokenId, tokenURI);
 
-      tokenURICount[tokenURI]--;
+      tokenURICount[defaultTokenURI[index]]--;
 
       if (tokenURICount[tokenURI] == 0) {
         defaultTokenURI[index] = defaultTokenURI[defaultTokenURI.length - 1];
