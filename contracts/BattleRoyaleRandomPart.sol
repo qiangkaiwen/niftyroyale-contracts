@@ -133,7 +133,7 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
         keccak256(abi.encode(i, _amount, block.timestamp, msg.sender, tokenId))
       ) % defaultTokenURI.length;
 
-      string memory tokenURI = string(abi.encodePacked(baseURI, defaultTokenURI[index]));
+      string memory tokenURI = defaultTokenURI[index];
 
       _setTokenURI(tokenId, tokenURI);
 
@@ -228,8 +228,9 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
    * @param _index Index of token uri
    */
   function removeTokenURI(uint256 _index) external onlyOwner {
-    maxSupply -= tokenURICount[defaultTokenURI[_index]];
-    delete tokenURICount[defaultTokenURI[_index]];
+    string memory tokenURI = defaultTokenURI[_index];
+    maxSupply -= tokenURICount[tokenURI];
+    delete tokenURICount[tokenURI];
     defaultTokenURI[_index] = defaultTokenURI[defaultTokenURI.length - 1];
     defaultTokenURI.pop();
 
