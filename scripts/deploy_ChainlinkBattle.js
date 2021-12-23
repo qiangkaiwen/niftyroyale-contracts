@@ -14,10 +14,10 @@ async function main() {
     "0x6e75b569a01ef56d18cab6a8e71e6600d6ce853834d4a5748b720d06f878b3a4", // Key Hash
     BigNumber.from("100000000000000").toBigInt() // Fee
   )
-  await chainlinkBattle.deployed()
 
-  console.log("Contract Address:", chainlinkBattle.address)
   console.log("Transaction Hash:", chainlinkBattle.deployTransaction.hash)
+  await chainlinkBattle.deployed()
+  console.log("Contract Address:", chainlinkBattle.address)
 }
 
 main().catch((error) => {

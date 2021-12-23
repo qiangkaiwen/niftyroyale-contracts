@@ -17,10 +17,9 @@ async function main() {
     "https://niftyroyale.mypinata.cloud/ipfs/",
     BigNumber.from("1639344000").toBigInt()
   )
-  await battleRoyaleRandomPart.deployed()
-
-  console.log("Contract Address:", battleRoyaleRandomPart.address)
   console.log("Transaction Hash:", battleRoyaleRandomPart.deployTransaction.hash)
+  await battleRoyaleRandomPart.deployed()
+  console.log("Contract Address:", battleRoyaleRandomPart.address)
 }
 
 main().catch((error) => {

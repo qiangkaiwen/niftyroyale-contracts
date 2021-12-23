@@ -72,6 +72,7 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
   uint256 public totalSupply;
   uint256 public unitsPerTransaction;
   uint256 public startingTime;
+  uint256 public defaultNFTTypeCount;
 
   uint32[] public inPlay;
 
@@ -142,6 +143,7 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
       if (tokenURICount[tokenURI] == 0) {
         defaultTokenURI[index] = defaultTokenURI[defaultTokenURI.length - 1];
         defaultTokenURI.pop();
+        defaultNFTTypeCount--;
       }
 
       inPlay.push(uint32(tokenId));
@@ -207,6 +209,7 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
     defaultTokenURI.push(_tokenURI);
     tokenURICount[_tokenURI] = _count;
     maxSupply += _count;
+    defaultNFTTypeCount++;
 
     emit TokenURIAdded(_tokenURI, _count);
   }
@@ -233,6 +236,7 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
     delete tokenURICount[tokenURI];
     defaultTokenURI[_index] = defaultTokenURI[defaultTokenURI.length - 1];
     defaultTokenURI.pop();
+    defaultNFTTypeCount--;
 
     emit TokenURIRemoved(_index, defaultTokenURI);
   }
