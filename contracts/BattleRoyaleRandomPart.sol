@@ -27,7 +27,12 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
   event BattleStarted(address battleAddress, uint32[] inPlay);
 
   /// @notice Event emitted when battle has ended.
-  event BattleEnded(address battleAddress, uint256 winnerTokenId, string prizeTokenURI);
+  event BattleEnded(
+    address battleAddress,
+    uint256 tokenId,
+    uint256 winnerTokenId,
+    string prizeTokenURI
+  );
 
   /// @notice Event emitted when base token uri set.
   event BaseURISet(string baseURI);
@@ -187,7 +192,12 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
 
     _setTokenURI(tokenId, string(abi.encodePacked(baseURI, prizeTokenURI)));
 
-    emit BattleEnded(address(this), tokenId, prizeTokenURI);
+    emit BattleEnded(
+      address(this),
+      tokenId,
+      _winnerTokenId,
+      string(abi.encodePacked(baseURI, prizeTokenURI))
+    );
   }
 
   /**
