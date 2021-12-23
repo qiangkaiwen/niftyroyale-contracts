@@ -132,17 +132,18 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
 
       uint256 index = uint256(
         keccak256(abi.encode(i, _amount, block.timestamp, msg.sender, tokenId))
-      ) % defaultTokenURI.length;
+      ) % defaultNFTTypeCount;
 
-      string memory tokenURI = string(abi.encodePacked(baseURI, defaultTokenURI[index]));
+      string memory defaultTokenURICID = defaultTokenURI[index];
+      string memory tokenURI = string(abi.encodePacked(baseURI, defaultTokenURICID));
 
       _setTokenURI(tokenId, tokenURI);
 
-      tokenURICount[defaultTokenURI[index]]--;
+      tokenURICount[defaultTokenURICID]--;
 
-      if (tokenURICount[tokenURI] == 0) {
-        defaultTokenURI[index] = defaultTokenURI[defaultTokenURI.length - 1];
-        defaultTokenURI.pop();
+      if (tokenURICount[defaultTokenURICID] == 0) {
+        defaultTokenURI[index] = defaultTokenURI[defaultNFTTypeCount - 1];
+        defaultTokenURI[defaultNFTTypeCount - 1] = defaultTokenURICID;
         defaultNFTTypeCount--;
       }
 
@@ -167,7 +168,6 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
    * @dev External function to start the battle. This function can be called only by owner.
    */
   function startBattle() external onlyOwner {
-    require(bytes(prizeTokenURI).length > 0 && inPlay.length > 1, "Not enough tokens to play");
     battleState = BATTLE_STATE.RUNNING;
 
     emit BattleStarted(address(this), inPlay);
