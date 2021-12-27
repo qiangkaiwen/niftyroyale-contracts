@@ -13,7 +13,7 @@ async function main() {
     "TVNRBRP",
     BigNumber.from("200000000000000").toBigInt(),
     5,
-    "QmPeb2rrjp8H1BhN4EPR682BDa1wcLumXJRY2guZVExcbM",
+    "QmecrVbiyGZE8JSxiWTb5UbyJ78TLPWeRcCbVzneRxmAZ7",
     "https://niftyroyale.mypinata.cloud/ipfs/",
     BigNumber.from("1639344000").toBigInt()
   )
