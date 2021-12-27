@@ -139,14 +139,12 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
         keccak256(abi.encode(i, _amount, block.timestamp, msg.sender, tokenId))
       ) % defaultNFTTypeCount;
 
-      string memory defaultTokenURICID = defaultTokenURI[index];
-      string memory tokenURI = string(abi.encodePacked(baseURI, defaultTokenURICID));
+      _setTokenURI(tokenId, string(abi.encodePacked(baseURI, defaultTokenURI[index])));
 
-      _setTokenURI(tokenId, tokenURI);
+      tokenURICount[defaultTokenURI[index]]--;
 
-      tokenURICount[defaultTokenURICID]--;
-
-      if (tokenURICount[defaultTokenURICID] == 0) {
+      if (tokenURICount[defaultTokenURI[index]] == 0) {
+        string memory defaultTokenURICID = defaultTokenURI[index];
         defaultTokenURI[index] = defaultTokenURI[defaultNFTTypeCount - 1];
         defaultTokenURI[defaultNFTTypeCount - 1] = defaultTokenURICID;
         defaultNFTTypeCount--;
