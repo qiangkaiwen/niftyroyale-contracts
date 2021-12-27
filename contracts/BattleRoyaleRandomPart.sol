@@ -44,7 +44,7 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
   event TokenURICountUpdated(string tokenURI, uint256 count);
 
   /// @notice Event emitted when token URI has removed.
-  event TokenURIRemoved(uint256 index, string[] defaultTokenURI);
+  event TokenURIRemoved(uint256 index, string[] defaultTokenURI, uint256 totalDefaultNFTTypeCount);
 
   /// @notice Event emitted when prize token uri set.
   event PrizeTokenURISet(string prizeTokenURI);
@@ -78,6 +78,7 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
   uint256 public unitsPerTransaction;
   uint256 public startingTime;
   uint256 public defaultNFTTypeCount;
+  uint256 public totalDefaultNFTTypeCount;
 
   uint32[] public inPlay;
 
@@ -116,7 +117,6 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
    * @param _amount Token amount to buy
    */
   function purchase(uint256 _amount) external payable {
-    require(price > 0, "Token price is zero");
     require(battleState == BATTLE_STATE.STANDBY, "Not ready to purchase tokens");
     require(maxSupply > 0 && totalSupply < maxSupply, "All NFTs were sold out");
 
@@ -218,7 +218,7 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
     tokenURICount[_tokenURI] = _count;
     maxSupply += _count;
     defaultNFTTypeCount++;
-
+    totalDefaultNFTTypeCount++;
     emit TokenURIAdded(_tokenURI, _count);
   }
 
@@ -245,8 +245,8 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
     defaultTokenURI[_index] = defaultTokenURI[defaultTokenURI.length - 1];
     defaultTokenURI.pop();
     defaultNFTTypeCount--;
-
-    emit TokenURIRemoved(_index, defaultTokenURI);
+    totalDefaultNFTTypeCount--;
+    emit TokenURIRemoved(_index, defaultTokenURI, totalDefaultNFTTypeCount);
   }
 
   /**
