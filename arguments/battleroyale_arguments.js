@@ -1,13 +1,13 @@
 const { BigNumber } = require("ethers")
 
 module.exports = [
-  "Nifty Royale X Testing: Nifty Royale NFT",
+  "Nifty Royale X Tester: Nifty Royale NFT",
   "TVNRBR",
-  BigNumber.from("200000000000000000").toBigInt(),
+  BigNumber.from("20000000000000000").toBigInt(),
   3,
   30,
-  "QmPS3DjUdXZAFXq3SgDPqHapnqQqWqd25VX87Ri4dWTkxE",
-  "Qmdy4U4V9JHoFgN4uQ7st9ZDrN7KGf2bZ6fe99kw8kASrQ",
+  "QmSBAiBXcEFDVxyNEiRqbS3rUGBV2JphvS9x3XpoZcmZqy",
+  "QmYF4D9Q8c8q7kkv3eBkayaH2VmaF7aHsxJbJJSmM5teRb",
   "https://niftyroyale.mypinata.cloud/ipfs/",
   BigNumber.from("1639344000").toBigInt(),
 ]
