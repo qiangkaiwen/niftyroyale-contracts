@@ -91,18 +91,18 @@ contract BattleRoyale is ERC721URIStorage, Ownable {
     uint256 _price,
     uint256 _unitsPerTransaction,
     uint256 _maxSupply,
+    string memory _baseURI,
     string memory _defaultTokenURI,
     string memory _prizeTokenURI,
-    string memory _baseURI,
     uint256 _startingTime
   ) ERC721(_name, _symbol) {
     battleState = BATTLE_STATE.STANDBY;
     price = _price;
     unitsPerTransaction = _unitsPerTransaction;
     maxSupply = _maxSupply;
+    baseURI = _baseURI;
     defaultTokenURI = _defaultTokenURI;
     prizeTokenURI = _prizeTokenURI;
-    baseURI = _baseURI;
     startingTime = _startingTime;
 
     emit BattleRoyaleDeployed();
