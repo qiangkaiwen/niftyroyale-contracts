@@ -61,9 +61,9 @@ contract BattleRoyale is ERC721URIStorage, Ownable {
 
   BATTLE_STATE public battleState;
 
-  string public prizeTokenURI;
-  string public defaultTokenURI;
   string public baseURI;
+  string public defaultTokenURI;
+  string public prizeTokenURI;
 
   uint256 public price;
   uint256 public maxSupply;

@@ -6,8 +6,8 @@ module.exports = [
   BigNumber.from("20000000000000000").toBigInt(),
   3,
   30,
-  "QmSBAiBXcEFDVxyNEiRqbS3rUGBV2JphvS9x3XpoZcmZqy",
-  "QmYF4D9Q8c8q7kkv3eBkayaH2VmaF7aHsxJbJJSmM5teRb",
   "https://niftyroyale.mypinata.cloud/ipfs/",
+  "QmTNFwZmP6v72A169vX3oxoTAQiyg5cfVUECxjQK1eyt6H",
+  "QmSBAiBXcEFDVxyNEiRqbS3rUGBV2JphvS9x3XpoZcmZqy",
   BigNumber.from("1639344000").toBigInt(),
 ]
