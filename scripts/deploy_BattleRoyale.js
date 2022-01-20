@@ -15,8 +15,8 @@ async function main() {
     3,
     30,
     "https://niftyroyale.mypinata.cloud/ipfs/",
-    "QmTNFwZmP6v72A169vX3oxoTAQiyg5cfVUECxjQK1eyt6H",
     "QmSBAiBXcEFDVxyNEiRqbS3rUGBV2JphvS9x3XpoZcmZqy",
+    "QmYF4D9Q8c8q7kkv3eBkayaH2VmaF7aHsxJbJJSmM5teRb",
     BigNumber.from("1639344000").toBigInt()
   )
   console.log("Transaction Hash:", battleRoyale.deployTransaction.hash)

@@ -99,8 +99,8 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
     string memory _symbol,
     uint256 _price,
     uint256 _unitsPerTransaction,
-    string memory _prizeTokenURI,
     string memory _baseURI,
+    string memory _prizeTokenURI,
     uint256 _startingTime
   ) ERC721(_name, _symbol) {
     battleState = BATTLE_STATE.STANDBY;

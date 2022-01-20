@@ -13,8 +13,8 @@ async function main() {
     "TVNRBRP",
     BigNumber.from("200000000000000").toBigInt(),
     5,
-    "QmecrVbiyGZE8JSxiWTb5UbyJ78TLPWeRcCbVzneRxmAZ7",
     "https://niftyroyale.mypinata.cloud/ipfs/",
+    "QmecrVbiyGZE8JSxiWTb5UbyJ78TLPWeRcCbVzneRxmAZ7",
     BigNumber.from("1639344000").toBigInt()
   )
   console.log("Transaction Hash:", battleRoyaleRandomPart.deployTransaction.hash)
