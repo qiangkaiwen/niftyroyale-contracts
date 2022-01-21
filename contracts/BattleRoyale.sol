@@ -174,7 +174,7 @@ contract BattleRoyale is ERC721URIStorage, Ownable {
     string memory tokenURI = string(abi.encodePacked(baseURI, prizeTokenURI));
     _setTokenURI(_winnerTokenId, tokenURI);
 
-    emit BattleEnded(address(this), _winnerTokenId, prizeTokenURI);
+    emit BattleEnded(address(this), _winnerTokenId, tokenURI);
   }
 
   /**

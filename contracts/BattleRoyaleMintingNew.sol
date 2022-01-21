@@ -184,7 +184,7 @@ contract BattleRoyaleMintingNew is ERC721URIStorage, Ownable {
     string memory tokenURI = string(abi.encodePacked(baseURI, prizeTokenURI));
     _setTokenURI(tokenId, tokenURI);
 
-    emit BattleEnded(address(this), tokenId, _winnerTokenId, prizeTokenURI);
+    emit BattleEnded(address(this), tokenId, _winnerTokenId, tokenURI);
   }
 
   /**
