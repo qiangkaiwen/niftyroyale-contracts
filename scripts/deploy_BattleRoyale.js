@@ -11,7 +11,7 @@ async function main() {
   const battleRoyale = await BattleRoyale.deploy(
     "Nifty Royale X Tester: Nifty Royale NFT",
     "TVNRBR",
-    BigNumber.from("20000000000000").toBigInt(),
+    BigNumber.from("200000000000000").toBigInt(),
     3,
     30,
     "https://niftyroyale.mypinata.cloud/ipfs/",

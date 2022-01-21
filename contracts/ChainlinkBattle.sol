@@ -56,6 +56,8 @@ contract ChainlinkBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface 
 
   BattleInfo[] public battleQueue;
 
+  uint256 public battleQueueLength;
+
   /**
    * Constructor inherits VRFConsumerBase
    *
@@ -104,6 +106,7 @@ contract ChainlinkBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface 
     battle.eliminatedTokenCount = _eliminatedTokenCount;
 
     battleQueue.push(battle);
+    battleQueueLength++;
 
     emit BattleAdded(battle);
   }
