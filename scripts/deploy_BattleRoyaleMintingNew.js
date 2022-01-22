@@ -9,7 +9,7 @@ async function main() {
 
   const BattleRoyaleMintingNew = await hre.ethers.getContractFactory("BattleRoyaleMintingNew")
   const battleRoyaleMintingNew = await BattleRoyaleMintingNew.deploy(
-    "Nifty Royale X Testing: Nifty Royale NFT",
+    "Nifty Royale X Tester: Nifty Royale NFT",
     "TVNRBR",
     BigNumber.from("20000000000000").toBigInt(),
     3,

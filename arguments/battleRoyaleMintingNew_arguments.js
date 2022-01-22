@@ -1,7 +1,7 @@
 const { BigNumber } = require("ethers")
 
 module.exports = [
-  "Nifty Royale X Testing: Nifty Royale NFT",
+  "Nifty Royale X Tester: Nifty Royale NFT",
   "TVNRBR",
   BigNumber.from("20000000000000").toBigInt(),
   3,
