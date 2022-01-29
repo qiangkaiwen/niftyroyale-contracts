@@ -24,12 +24,12 @@ module.exports = {
     },
     mumbai: {
       url: process.env.MUMBAI_URL || "",
-      gasPrice: 150000000000,
+      gasPrice: 50000000000,
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     matic: {
       url: process.env.MATIC_URL || "",
-      gasPrice: 150000000000,
+      gasPrice: 50000000000,
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
   },
