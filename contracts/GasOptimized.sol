@@ -1,283 +1,119 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "hardhat/console.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "erc721a/contracts/ERC721A.sol";
 
-contract GasOptimized is ERC721URIStorage, Ownable {
-  using SafeERC20 for IERC20;
-  using Strings for uint256;
+contract GasOptimized is ERC721A, Ownable, ReentrancyGuard {
+  uint256 public constant MAX_SUPPLY = 3000;
+  uint256 public constant PRICE_PER_TOKEN = 0.001 ether;
+  uint256 public allowListMaxMint = 10;
 
-  /// @notice Event emitted when contract is deployed.
-  event BattleRoyaleDeployed();
+  uint256 public unitsPerTransaction;
+  uint256 public dropTime;
+  string private _baseTokenURI;
+  bool public saleIsActive = false;
+  bool public isAllowListActive = false;
 
-  /// @notice Event emitted when owner withdrew the ETH.
-  event EthWithdrew(address receiver);
-
-  /// @notice Event emitted when owner withdrew the ERC20 token.
-  event ERC20TokenWithdrew(address receiver);
+  mapping(address => uint8) private _allowList;
 
   /// @notice Event emitted when user purchased the tokens.
-  event Purchased(address user, uint256 amount, uint256 totalSupply);
+  event Purchased(address user, uint256 numberOfTokens);
 
   /// @notice Event emitted when owner has set starting time.
-  event StartingTimeSet(uint256 time);
-
-  /// @notice Event emitted when battle has started.
-  event BattleStarted(address battleAddress, uint32[] inPlay);
-
-  /// @notice Event emitted when battle has ended.
-  event BattleEnded(
-    address battleAddress,
-    uint256 tokenId,
-    uint256 winnerTokenId,
-    string prizeTokenURI
-  );
-
-  /// @notice Event emitted when base token uri set.
-  event BaseURISet(string baseURI);
-
-  /// @notice Event emitted when default token uri set.
-  event DefaultTokenURISet(string defaultTokenURI);
-
-  /// @notice Event emitted when prize token uri set.
-  event PrizeTokenURISet(string prizeTokenURI);
-
-  /// @notice Event emitted when interval time set.
-  event IntervalTimeSet(uint256 intervalTime);
-
-  /// @notice Event emitted when token price set.
-  event PriceSet(uint256 price);
+  event DropTimeSet(uint256 time);
 
   /// @notice Event emitted when the units per transaction set.
   event UnitsPerTransactionSet(uint256 unitsPerTransaction);
 
-  /// @notice Event emitted when max supply set.
-  event MaxSupplySet(uint256 maxSupply);
-
-  enum BATTLE_STATE {
-    STANDBY,
-    RUNNING,
-    ENDED
-  }
-
-  BATTLE_STATE public battleState;
-
-  string public prizeTokenURI;
-  string public defaultTokenURI;
-  string public baseURI;
-
-  uint256 public price;
-  uint256 public maxSupply;
-  uint256 public totalSupply;
-  uint256 public unitsPerTransaction;
-  uint256 public startingTime;
-
-  uint32[] public inPlay;
-
-  /**
-   * @dev Constructor function
-   * @param _name Token name
-   * @param _symbol Token symbol
-   * @param _price Token price
-   * @param _unitsPerTransaction Purchasable token amounts per transaction
-   * @param _maxSupply Maximum number of mintable tokens
-   * @param _defaultTokenURI Deafult token uri
-   * @param _prizeTokenURI Prize token uri
-   * @param _baseURI Base token uri
-   * @param _startingTime Start time to purchase NFT
-   */
   constructor(
-    string memory _name,
-    string memory _symbol,
-    uint256 _price,
-    uint256 _unitsPerTransaction,
-    uint256 _maxSupply,
     string memory _baseURI,
-    string memory _defaultTokenURI,
-    string memory _prizeTokenURI,
-    uint256 _startingTime
-  ) ERC721(_name, _symbol) {
-    battleState = BATTLE_STATE.STANDBY;
-    price = _price;
+    uint256 _unitsPerTransaction,
+    uint256 _dropTime
+  ) ERC721A("niftyroyale", "NIFTYROYALE") {
     unitsPerTransaction = _unitsPerTransaction;
-    maxSupply = _maxSupply;
-    defaultTokenURI = _defaultTokenURI;
-    prizeTokenURI = _prizeTokenURI;
-    baseURI = _baseURI;
-    startingTime = _startingTime;
-
-    emit BattleRoyaleDeployed();
+    _baseTokenURI = _baseURI;
+    dropTime = _dropTime;
   }
 
-  /**
-   * @dev External function to purchase tokens.
-   * @param _amount Token amount to buy
-   */
-  function purchase(uint256 _amount) external payable {
-    require(price > 0, "Token price is zero");
-    require(battleState == BATTLE_STATE.STANDBY, "Not ready to purchase tokens");
-    require(maxSupply > 0 && totalSupply < maxSupply, "All NFTs were sold out");
-    require(block.timestamp >= startingTime, "Not time to purchase");
+  function setIsAllowListActive(bool _isAllowListActive) external onlyOwner {
+    isAllowListActive = _isAllowListActive;
+  }
 
-    if (msg.sender != owner()) {
-      require(
-        _amount <= maxSupply - totalSupply && _amount > 0 && _amount <= unitsPerTransaction,
-        "Out range of token amount"
-      );
-      require(bytes(defaultTokenURI).length > 0, "Default token URI is not set");
-      require(msg.value >= (price * _amount), "Not enough ETH to buy tokens");
+  function setAllowList(address[] calldata addresses, uint8 numAllowedToMint) external onlyOwner {
+    for (uint256 i = 0; i < addresses.length; i++) {
+      _allowList[addresses[i]] = numAllowedToMint;
+    }
+  }
+
+  function numAvailableToMint(address addr) external view returns (uint8) {
+    return _allowList[addr];
+  }
+
+  function mintAllowList(uint8 numberOfTokens) external payable nonReentrant {
+    require(isAllowListActive, "Allow list is not active");
+    require(numberOfTokens <= _allowList[msg.sender], "Exceeded max value to purchase");
+    require(totalSupply() + numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
+    require(PRICE_PER_TOKEN * numberOfTokens <= msg.value, "Ether value sent is not correct");
+
+    _allowList[msg.sender] -= numberOfTokens;
+    _safeMint(msg.sender, numberOfTokens);
+  }
+
+  function mint(uint256 numberOfTokens) public payable nonReentrant {
+    require(block.timestamp >= dropTime, "sale has not started yet");
+    require(numberOfTokens <= unitsPerTransaction, "Exceeded max token purchase");
+    require(totalSupply() + numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
+    require(PRICE_PER_TOKEN * numberOfTokens <= msg.value, "Ether value sent is not correct");
+
+    _safeMint(msg.sender, numberOfTokens);
+
+    emit Purchased(msg.sender, numberOfTokens);
+  }
+
+  function reserveNFTs(uint256 numberOfTokens) public onlyOwner {
+    require(totalSupply() + numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
+    _safeMint(msg.sender, numberOfTokens);
+
+    emit Purchased(msg.sender, numberOfTokens);
+  }
+
+  function tokensOfOwner(address _owner) external view returns (uint256[] memory) {
+    uint256 tokenCount = balanceOf(_owner);
+    uint256[] memory tokensId = new uint256[](tokenCount);
+    for (uint256 i = 0; i < tokenCount; i++) {
+      tokensId[i] = tokenOfOwnerByIndex(_owner, i);
     }
 
-    for (uint256 i = 0; i < _amount; i++) {
-      uint256 tokenId = totalSupply + i + 1;
-
-      _safeMint(msg.sender, tokenId);
-
-      string memory tokenURI = string(abi.encodePacked(baseURI, defaultTokenURI));
-
-      _setTokenURI(tokenId, tokenURI);
-
-      inPlay.push(uint32(tokenId));
-    }
-
-    totalSupply += _amount;
-
-    emit Purchased(msg.sender, _amount, totalSupply);
+    return tokensId;
   }
 
-  /**
-   * @dev External function to set starting time. This function can be called only by owner.
-   */
-  function setStartingTime(uint256 _newTime) external onlyOwner {
-    startingTime = _newTime;
+  function setDropTime(uint256 _newTime) external onlyOwner {
+    dropTime = _newTime;
 
-    emit StartingTimeSet(_newTime);
+    emit DropTimeSet(_newTime);
   }
 
-  /**
-   * @dev External function to start the battle. This function can be called only by owner.
-   */
-  function startBattle() external onlyOwner {
-    require(bytes(prizeTokenURI).length > 0 && inPlay.length > 1, "Not enough tokens to play");
-    battleState = BATTLE_STATE.RUNNING;
+  // metadata URI
 
-    emit BattleStarted(address(this), inPlay);
+  function _baseURI() internal view virtual override returns (string memory) {
+    return _baseTokenURI;
   }
 
-  /**
-   * @dev External function to end the battle. This function can be called only by owner.
-   * @param _winnerTokenId Winner token Id in battle
-   */
-  function endBattle(uint256 _winnerTokenId) external onlyOwner {
-    require(battleState == BATTLE_STATE.RUNNING, "Battle is not started");
-    battleState = BATTLE_STATE.ENDED;
-
-    uint256 tokenId = totalSupply + 1;
-
-    address winnerAddress = ownerOf(_winnerTokenId);
-    _safeMint(winnerAddress, tokenId);
-
-    string memory tokenURI = string(abi.encodePacked(baseURI, prizeTokenURI));
-    _setTokenURI(tokenId, tokenURI);
-
-    emit BattleEnded(address(this), tokenId, _winnerTokenId, tokenURI);
+  function setBaseURI(string calldata baseURI) external onlyOwner {
+    _baseTokenURI = baseURI;
   }
 
-  /**
-   * @dev External function to set the base token URI. This function can be called only by owner.
-   * @param _tokenURI New base token uri
-   */
-  function setBaseURI(string memory _tokenURI) external onlyOwner {
-    baseURI = _tokenURI;
-
-    emit BaseURISet(baseURI);
-  }
-
-  /**
-   * @dev External function to set the default token URI. This function can be called only by owner.
-   * @param _tokenURI New default token uri
-   */
-  function setDefaultTokenURI(string memory _tokenURI) external onlyOwner {
-    defaultTokenURI = _tokenURI;
-
-    emit DefaultTokenURISet(defaultTokenURI);
-  }
-
-  /**
-   * @dev External function to set the prize token URI. This function can be called only by owner.
-   * @param _tokenURI New prize token uri
-   */
-  function setPrizeTokenURI(string memory _tokenURI) external onlyOwner {
-    prizeTokenURI = _tokenURI;
-
-    emit PrizeTokenURISet(prizeTokenURI);
-  }
-
-  /**
-   * @dev External function to set the token price. This function can be called only by owner.
-   * @param _price New token price
-   */
-  function setPrice(uint256 _price) external onlyOwner {
-    price = _price;
-
-    emit PriceSet(price);
-  }
-
-  /**
-   * @dev External function to set the limit of buyable token amounts. This function can be called only by owner.
-   * @param _unitsPerTransaction New purchasable token amounts per transaction
-   */
   function setUnitsPerTransaction(uint256 _unitsPerTransaction) external onlyOwner {
     unitsPerTransaction = _unitsPerTransaction;
 
     emit UnitsPerTransactionSet(unitsPerTransaction);
   }
 
-  /**
-   * @dev External function to set max supply. This function can be called only by owner.
-   * @param _maxSupply New maximum token amounts
-   */
-  function setMaxSupply(uint256 _maxSupply) external onlyOwner {
-    maxSupply = _maxSupply;
-
-    emit MaxSupplySet(maxSupply);
-  }
-
-  /**
-   * Fallback function to receive ETH
-   */
-  receive() external payable {}
-
-  /**
-   * @dev External function to withdraw ETH in contract. This function can be called only by owner.
-   * @param _amount ETH amount
-   */
-  function withdrawETH(uint256 _amount) external onlyOwner {
+  function withdraw() external onlyOwner {
     uint256 balance = address(this).balance;
-    require(_amount <= balance, "Out of balance");
-
-    payable(msg.sender).transfer(_amount);
-
-    emit EthWithdrew(msg.sender);
-  }
-
-  /**
-   * @dev External function to withdraw ERC-20 tokens in contract. This function can be called only by owner.
-   * @param _tokenAddr Address of ERC-20 token
-   * @param _amount ERC-20 token amount
-   */
-  function withdrawERC20Token(address _tokenAddr, uint256 _amount) external onlyOwner {
-    IERC20 token = IERC20(_tokenAddr);
-
-    uint256 balance = token.balanceOf(address(this));
-    require(_amount <= balance, "Out of balance");
-
-    token.safeTransfer(msg.sender, _amount);
-
-    emit ERC20TokenWithdrew(msg.sender);
+    require(balance > 0, "No ether left to withdraw");
+    payable(msg.sender).transfer(balance);
   }
 }
