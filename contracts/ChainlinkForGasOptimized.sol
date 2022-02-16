@@ -6,19 +6,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
-import "hardhat/console.sol";
 
 contract ChainlinkForGasOptimized is VRFConsumerBase, Ownable, KeeperCompatibleInterface {
   using SafeERC20 for IERC20;
-
-  /// @notice Event emitted when contract is deployed.
-  event ChainlinkBattleDeployed();
-
-  /// @notice Event emitted when owner withdrew the ETH.
-  event EthWithdrew(address receiver);
-
-  /// @notice Event emitted when owner withdrew the ERC20 token.
-  event ERC20TokenWithdrew(address receiver);
 
   /// @notice Event emitted when battle is added.
   event BattleAdded(BattleInfo battle);
@@ -80,8 +70,6 @@ contract ChainlinkForGasOptimized is VRFConsumerBase, Ownable, KeeperCompatibleI
   {
     keyHash = _keyHash;
     fee = _fee;
-
-    emit ChainlinkBattleDeployed();
   }
 
   /**
@@ -267,8 +255,6 @@ contract ChainlinkForGasOptimized is VRFConsumerBase, Ownable, KeeperCompatibleI
     require(_amount <= balance, "ChainlinkKeeper: Out of balance");
 
     payable(msg.sender).transfer(_amount);
-
-    emit EthWithdrew(msg.sender);
   }
 
   /**
@@ -283,8 +269,6 @@ contract ChainlinkForGasOptimized is VRFConsumerBase, Ownable, KeeperCompatibleI
     require(_amount <= balance, "ChainlinkKeeper: Out of balance");
 
     token.safeTransfer(msg.sender, _amount);
-
-    emit ERC20TokenWithdrew(msg.sender);
   }
 
   /**
