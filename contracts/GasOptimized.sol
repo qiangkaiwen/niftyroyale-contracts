@@ -3,15 +3,15 @@ pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "erc721a/contracts/ERC721A.sol";
 
 contract GasOptimized is ERC721A, Ownable, ReentrancyGuard {
   uint256 public constant MAX_SUPPLY = 3000;
   uint256 public constant PRICE_PER_TOKEN = 0.001 ether;
-  uint256 public allowListMaxMint = 10;
+  uint256 public constant PURCHASE_LIMIT = 10;
 
-  uint256 public unitsPerTransaction;
+  uint256 public allowListMaxMint = 10;
   uint256 public dropTime;
   string private _baseTokenURI;
   bool public saleIsActive = false;
@@ -20,12 +20,7 @@ contract GasOptimized is ERC721A, Ownable, ReentrancyGuard {
   // declare bytes32 variables to store root (a hash)
   bytes32 public merkleRoot;
 
-  constructor(
-    string memory _baseURI,
-    uint256 _unitsPerTransaction,
-    uint256 _dropTime
-  ) ERC721A("niftyroyale", "NIFTYROYALE") {
-    unitsPerTransaction = _unitsPerTransaction;
+  constructor(string memory _baseURI, uint256 _dropTime) ERC721A("niftyroyale", "NIFTYROYALE") {
     _baseTokenURI = _baseURI;
     dropTime = _dropTime;
   }
@@ -69,16 +64,16 @@ contract GasOptimized is ERC721A, Ownable, ReentrancyGuard {
     _safeMint(msg.sender, numberOfTokens);
   }
 
-  function mint(uint256 numberOfTokens) public payable nonReentrant {
+  function mint(uint256 numberOfTokens) external payable nonReentrant {
     require(block.timestamp >= dropTime, "sale has not started yet");
-    require(numberOfTokens <= unitsPerTransaction, "Exceeded max token purchase");
+    require(numberOfTokens <= PURCHASE_LIMIT, "Exceeded max token purchase");
     require(totalSupply() + numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
     require(PRICE_PER_TOKEN * numberOfTokens <= msg.value, "Ether value sent is not correct");
 
     _safeMint(msg.sender, numberOfTokens);
   }
 
-  function reserveNFTs(uint256 numberOfTokens) public onlyOwner nonReentrant {
+  function reserveNFTs(uint256 numberOfTokens) external onlyOwner nonReentrant {
     require(totalSupply() + numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
 
     _safeMint(msg.sender, numberOfTokens);
@@ -102,10 +97,6 @@ contract GasOptimized is ERC721A, Ownable, ReentrancyGuard {
 
   function setBaseURI(string calldata baseURI) external onlyOwner {
     _baseTokenURI = baseURI;
-  }
-
-  function setUnitsPerTransaction(uint256 _unitsPerTransaction) external onlyOwner {
-    unitsPerTransaction = _unitsPerTransaction;
   }
 
   function setDropTime(uint256 _newTime) external onlyOwner {
