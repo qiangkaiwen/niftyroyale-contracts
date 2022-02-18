@@ -2,23 +2,11 @@
 pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "hardhat/console.sol";
 
 contract BattleRoyaleMintingNew is ERC721URIStorage, Ownable {
   using SafeERC20 for IERC20;
-  using Strings for uint256;
-
-  /// @notice Event emitted when contract is deployed.
-  event BattleRoyaleDeployed();
-
-  /// @notice Event emitted when owner withdrew the ETH.
-  event EthWithdrew(address receiver);
-
-  /// @notice Event emitted when owner withdrew the ERC20 token.
-  event ERC20TokenWithdrew(address receiver);
 
   /// @notice Event emitted when user purchased the tokens.
   event Purchased(address user, uint256 amount, uint256 totalSupply);
@@ -36,15 +24,6 @@ contract BattleRoyaleMintingNew is ERC721URIStorage, Ownable {
     uint256 winnerTokenId,
     string prizeTokenURI
   );
-
-  /// @notice Event emitted when base token uri set.
-  event BaseURISet(string baseURI);
-
-  /// @notice Event emitted when default token uri set.
-  event DefaultTokenURISet(string defaultTokenURI);
-
-  /// @notice Event emitted when prize token uri set.
-  event PrizeTokenURISet(string prizeTokenURI);
 
   /// @notice Event emitted when interval time set.
   event IntervalTimeSet(uint256 intervalTime);
@@ -109,8 +88,6 @@ contract BattleRoyaleMintingNew is ERC721URIStorage, Ownable {
     prizeTokenURI = _prizeTokenURI;
     baseURI = _baseURI;
     startingTime = _startingTime;
-
-    emit BattleRoyaleDeployed();
   }
 
   /**
@@ -193,8 +170,6 @@ contract BattleRoyaleMintingNew is ERC721URIStorage, Ownable {
    */
   function setBaseURI(string memory _tokenURI) external onlyOwner {
     baseURI = _tokenURI;
-
-    emit BaseURISet(baseURI);
   }
 
   /**
@@ -203,8 +178,6 @@ contract BattleRoyaleMintingNew is ERC721URIStorage, Ownable {
    */
   function setDefaultTokenURI(string memory _tokenURI) external onlyOwner {
     defaultTokenURI = _tokenURI;
-
-    emit DefaultTokenURISet(defaultTokenURI);
   }
 
   /**
@@ -213,8 +186,6 @@ contract BattleRoyaleMintingNew is ERC721URIStorage, Ownable {
    */
   function setPrizeTokenURI(string memory _tokenURI) external onlyOwner {
     prizeTokenURI = _tokenURI;
-
-    emit PrizeTokenURISet(prizeTokenURI);
   }
 
   /**
@@ -261,8 +232,6 @@ contract BattleRoyaleMintingNew is ERC721URIStorage, Ownable {
     require(_amount <= balance, "Out of balance");
 
     payable(msg.sender).transfer(_amount);
-
-    emit EthWithdrew(msg.sender);
   }
 
   /**
@@ -277,7 +246,5 @@ contract BattleRoyaleMintingNew is ERC721URIStorage, Ownable {
     require(_amount <= balance, "Out of balance");
 
     token.safeTransfer(msg.sender, _amount);
-
-    emit ERC20TokenWithdrew(msg.sender);
   }
 }

@@ -8,15 +8,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
   using SafeERC20 for IERC20;
 
-  /// @notice Event emitted when contract is deployed.
-  event BattleRoyaleRandomPartDeployed();
-
-  /// @notice Event emitted when owner withdrew the ETH.
-  event EthWithdrew(address receiver);
-
-  /// @notice Event emitted when owner withdrew the ERC20 token.
-  event ERC20TokenWithdrew(address receiver);
-
   /// @notice Event emitted when user purchased the tokens.
   event Purchased(address user, uint256 amount, uint256 totalSupply);
 
@@ -33,21 +24,6 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
     uint256 winnerTokenId,
     string prizeTokenURI
   );
-
-  /// @notice Event emitted when base token uri set.
-  event BaseURISet(string baseURI);
-
-  /// @notice Event emitted when token URIs has added.
-  event TokenURIAdded(string tokenURI, uint256 count);
-
-  /// @notice Event emitted when token URI count has updated.
-  event TokenURICountUpdated(string tokenURI, uint256 count);
-
-  /// @notice Event emitted when token URI has removed.
-  event TokenURIRemoved(uint256 index, string[] defaultTokenURI, uint256 totalDefaultNFTTypeCount);
-
-  /// @notice Event emitted when prize token uri set.
-  event PrizeTokenURISet(string prizeTokenURI);
 
   /// @notice Event emitted when interval time set.
   event IntervalTimeSet(uint256 intervalTime);
@@ -109,7 +85,6 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
     prizeTokenURI = _prizeTokenURI;
     baseURI = _baseURI;
     startingTime = _startingTime;
-    emit BattleRoyaleRandomPartDeployed();
   }
 
   /**
@@ -204,8 +179,6 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
    */
   function setBaseURI(string memory _newBaseURI) external onlyOwner {
     baseURI = _newBaseURI;
-
-    emit BaseURISet(baseURI);
   }
 
   /**
@@ -219,7 +192,6 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
     maxSupply += _count;
     defaultNFTTypeCount++;
     totalDefaultNFTTypeCount++;
-    emit TokenURIAdded(_tokenURI, _count);
   }
 
   /**
@@ -230,8 +202,6 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
   function updateTokenURICount(string memory _tokenURI, uint256 _count) external onlyOwner {
     maxSupply = maxSupply - tokenURICount[_tokenURI] + _count;
     tokenURICount[_tokenURI] = _count;
-
-    emit TokenURICountUpdated(_tokenURI, _count);
   }
 
   /**
@@ -246,7 +216,6 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
     defaultTokenURI.pop();
     defaultNFTTypeCount--;
     totalDefaultNFTTypeCount--;
-    emit TokenURIRemoved(_index, defaultTokenURI, totalDefaultNFTTypeCount);
   }
 
   /**
@@ -255,8 +224,6 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
    */
   function setPrizeTokenURI(string memory _tokenURI) external onlyOwner {
     prizeTokenURI = _tokenURI;
-
-    emit PrizeTokenURISet(prizeTokenURI);
   }
 
   /**
@@ -293,8 +260,6 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
     require(_amount <= balance, "Out of balance");
 
     payable(msg.sender).transfer(_amount);
-
-    emit EthWithdrew(msg.sender);
   }
 
   /**
@@ -309,7 +274,5 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
     require(_amount <= balance, "Out of balance");
 
     token.safeTransfer(msg.sender, _amount);
-
-    emit ERC20TokenWithdrew(msg.sender);
   }
 }
