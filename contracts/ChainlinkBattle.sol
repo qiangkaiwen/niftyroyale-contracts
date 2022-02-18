@@ -5,7 +5,6 @@ import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
-import "hardhat/console.sol";
 
 contract ChainlinkBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface {
   using SafeERC20 for IERC20;
