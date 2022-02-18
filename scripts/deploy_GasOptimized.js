@@ -8,11 +8,7 @@ async function main() {
   console.log("Deployer balance:", (await deployer.getBalance()).toString())
 
   const GasOptimized = await hre.ethers.getContractFactory("GasOptimized")
-  const gasOptimized = await GasOptimized.deploy(
-    5,
-    "https://niftyroyale.mypinata.cloud/ipfs/QmSBAiBXcEFDVxyNEiRqbS3rUGBV2JphvS9x3XpoZcmZqy",
-    BigNumber.from("1639344000").toBigInt()
-  )
+  const gasOptimized = await GasOptimized.deploy()
 
   console.log("Transaction Hash:", gasOptimized.deployTransaction.hash)
   await gasOptimized.deployed()
