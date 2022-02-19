@@ -7,21 +7,23 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "erc721a/contracts/ERC721A.sol";
 
 contract GasOptimized is ERC721A, Ownable, ReentrancyGuard {
+  constructor() ERC721A("niftyroyale", "NIFTYROYALE") {}
+
   uint256 public constant MAX_SUPPLY = 3000;
   uint256 public constant PRICE_PER_TOKEN = 0.001 ether;
-  uint256 public constant PURCHASE_LIMIT = 10;
-  uint256 public constant ALLOW_LIST_MAX_MINT = 10;
-  uint256 public constant RESERVE_MAX_MINT = 10;
+  uint256 public constant PURCHASE_LIMIT = 5;
+  uint256 public constant ALLOW_LIST_MAX_MINT = 2;
 
   string private _baseTokenURI;
 
   bool public saleIsActive = false;
   bool public isAllowListActive = false;
+  bool public isDevAllowListActive = false;
+
+  mapping(address => uint8) private _devAllowList;
 
   // declare bytes32 variables to store root (a hash)
   bytes32 public merkleRoot;
-
-  constructor() ERC721A("niftyroyale", "NIFTYROYALE") {}
 
   // function to set the root of Merkle Tree
   function setMerkleRoot(bytes32 _root) external onlyOwner {
@@ -50,6 +52,23 @@ contract GasOptimized is ERC721A, Ownable, ReentrancyGuard {
     isAllowListActive = _isAllowListActive;
   }
 
+  function setIsDevAllowListActive(bool _isDevAllowListActive) external onlyOwner {
+    isDevAllowListActive = _isDevAllowListActive;
+  }
+
+  function setDevAllowList(address[] calldata addresses, uint8 numAllowedToMint)
+    external
+    onlyOwner
+  {
+    for (uint256 i = 0; i < addresses.length; i++) {
+      _devAllowList[addresses[i]] = numAllowedToMint;
+    }
+  }
+
+  function numAvailableToMintForDev(address addr) external view returns (uint8) {
+    return _devAllowList[addr];
+  }
+
   function mintAllowList(uint8 _numberOfTokens, bytes32[] calldata _merkleProof)
     external
     payable
@@ -75,17 +94,13 @@ contract GasOptimized is ERC721A, Ownable, ReentrancyGuard {
     _safeMint(msg.sender, _numberOfTokens);
   }
 
-  function reserveNFTs(uint256 _numberOfTokens, bytes32[] calldata _merkleProof)
-    external
-    nonReentrant
-  {
-    require(_numberOfTokens <= RESERVE_MAX_MINT, "Exceeded max token purchase");
+  function reserveNFTs(uint8 _numberOfTokens) external nonReentrant {
+    require(isDevAllowListActive, "Allow list is not active");
+    require(_devAllowList[msg.sender] >= 0, "msg.sender is Not in allow list");
+    require(_numberOfTokens <= _devAllowList[msg.sender], "Exceeded max token purchase");
     require(totalSupply() + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
-    require(
-      _verifyMerkleLeaf(_generateMerkleLeaf(msg.sender), merkleRoot, _merkleProof),
-      "You are not in allowlist"
-    );
 
+    _devAllowList[msg.sender] -= _numberOfTokens;
     _safeMint(msg.sender, _numberOfTokens);
   }
 
