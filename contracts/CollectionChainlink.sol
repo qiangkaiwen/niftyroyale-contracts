@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
 
-contract ChainlinkForGasOptimized is VRFConsumerBase, Ownable, KeeperCompatibleInterface {
+contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterface {
   using SafeERC20 for IERC20;
 
   /// @notice Event emitted when battle is added.
