@@ -44,16 +44,19 @@ contract GasOptimized is ERC721A, Ownable, ReentrancyGuard {
     return MerkleProof.verify(_proof, _merkleRoot, _leafNode);
   }
 
-  function setSaleState(bool _newState) public onlyOwner {
-    saleIsActive = _newState;
+  /*
+   * Pause sale if active, make active if paused
+   */
+  function flipSaleState() external onlyOwner {
+    saleIsActive = !saleIsActive;
   }
 
-  function setIsAllowListActive(bool _isAllowListActive) external onlyOwner {
-    isAllowListActive = _isAllowListActive;
+  function flipIsAllowListState() external onlyOwner {
+    isAllowListActive = !isAllowListActive;
   }
 
-  function setIsDevAllowListActive(bool _isDevAllowListActive) external onlyOwner {
-    isDevAllowListActive = _isDevAllowListActive;
+  function flipIsDevAllowListState() external onlyOwner {
+    isDevAllowListActive = !isDevAllowListActive;
   }
 
   function setDevAllowList(address[] calldata addresses, uint8 numAllowedToMint)
