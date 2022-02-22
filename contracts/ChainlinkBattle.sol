@@ -131,10 +131,10 @@ contract ChainlinkBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface 
     uint256 battleId = bytesToUint256(_performData, 0);
     BattleInfo memory battle = battleQueue[battleId];
 
-    require(battle.battleState, "ChainlinkKeeper: Current battle is finished");
+    require(battle.battleState, "Current battle is finished");
     require(
       block.timestamp >= battle.lastEliminatedTime + (battle.intervalTime * 1 minutes),
-      "ChainlinkKeeper: Trigger time is not correct"
+      "Trigger time is not correct"
     );
 
     executeBattle(battleId);
@@ -147,8 +147,8 @@ contract ChainlinkBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface 
   function executeBattle(uint256 _battleId) internal {
     BattleInfo storage battle = battleQueue[_battleId];
 
-    require(LINK.balanceOf(address(this)) >= fee, "ChainlinkKeeper: Not enough LINK");
-    require(battle.battleState, "ChainlinkKeeper: Current battle is finished");
+    require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK");
+    require(battle.battleState, "Current battle is finished");
 
     bytes32 requestId = requestRandomness(keyHash, fee);
     requestToBattle[requestId] = _battleId;
@@ -252,7 +252,7 @@ contract ChainlinkBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface 
    */
   function withdrawETH(uint256 _amount) external onlyOwner {
     uint256 balance = address(this).balance;
-    require(_amount <= balance, "ChainlinkKeeper: Out of balance");
+    require(_amount <= balance, "Out of balance");
 
     payable(msg.sender).transfer(_amount);
   }
@@ -266,7 +266,7 @@ contract ChainlinkBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface 
     IERC20 token = IERC20(_tokenAddr);
 
     uint256 balance = token.balanceOf(address(this));
-    require(_amount <= balance, "ChainlinkKeeper: Out of balance");
+    require(_amount <= balance, "Out of balance");
 
     token.safeTransfer(msg.sender, _amount);
   }
@@ -277,7 +277,7 @@ contract ChainlinkBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface 
    * @param _start Start index
    */
   function bytesToUint256(bytes memory _bytes, uint256 _start) internal pure returns (uint256) {
-    require(_bytes.length >= _start + 32, "ChainlinkKeeper: toUint256_outOfBounds");
+    require(_bytes.length >= _start + 32, "toUint256_outOfBounds");
     uint256 tempUint;
 
     assembly {

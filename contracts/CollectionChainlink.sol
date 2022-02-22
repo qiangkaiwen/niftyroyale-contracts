@@ -10,6 +10,8 @@ import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
 contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterface {
   using SafeERC20 for IERC20;
 
+  event BattlesInitialized();
+
   /// @notice Event emitted when battle is added.
   event BattleAdded(BattleInfo battle);
 
@@ -17,10 +19,10 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
   event BattleExecuted(uint256 battleId, bytes32 requestId);
 
   /// @notice Event emitted when one nft is eliminated.
-  event Eliminated(address gameAddr, uint256 tokenId, bool battleState);
+  event Eliminated(address gameAddr, uint256 tokenId);
 
   /// @notice Event emitted when winner is set.
-  event BattleEnded(bool finished, address gameAddr, uint256 winnerTokenId, bool battleState);
+  event BattleEnded(address gameAddr, uint256 winnerTokenId, BattleState battleState);
 
   /// @notice Event emitted when interval time is set.
   event BattleIntervalTimeSet(uint256 battleId, uint256 intervalTime);
@@ -28,25 +30,46 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
   /// @notice Event emitted when eliminated token count is set.
   event EliminatedTokenCountSet(uint256 battleId, uint256 eliminatedTokenCount);
 
+  /// @notice Event emitted when tier count is set.
+  event TierCountSet(uint256 tierCount);
+
+  /// @notice Event emitted when token ids for battle are added.
+  event TokenIdsAdded(address user, uint256 battleId, uint32[] tokenIds);
+
+  /// @notice Event emitted when battle started.
+  event BattleStated(uint256 battleId, BattleInfo battle);
+
+  /// @notice Event emitted when prize token for the winner is set.
+  event PrizeTokenSet(uint256 battleId, address prizeAddr, uint256 prizeTokenId);
+
+  enum BattleState {
+    STANDBY,
+    RUNNING,
+    ENDED
+  }
+
   bytes32 internal keyHash;
   uint256 public fee;
 
   mapping(bytes32 => uint256) private requestToBattle;
 
   struct BattleInfo {
+    BattleState battleState;
     address gameAddr;
-    uint256 intervalTime;
-    uint256 lastEliminatedTime;
+    address prizeAddr;
     uint32[] inPlay;
     uint32[] outOfPlay;
-    bool battleState;
-    uint256 winnerTokenId;
+    uint256 intervalTime;
+    uint256 lastEliminatedTime;
     uint256 eliminatedTokenCount;
+    uint256 winnerTokenId;
+    uint256 prizeTokenId;
   }
 
   BattleInfo[] public battleQueue;
 
   uint256 public battleQueueLength;
+  uint256 public tierCount = 3;
 
   /**
    * Constructor inherits VRFConsumerBase
@@ -72,31 +95,60 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
     fee = _fee;
   }
 
+  function setTierCount(uint256 _tierCount) external onlyOwner {
+    tierCount = _tierCount;
+
+    emit TierCountSet(_tierCount);
+  }
+
   /**
-   * @dev External function to add battle. This function can be called only by owner.
+   * @dev External function to initialize battles. Set only battle state as STANDBY.
    * @param _gameAddr Battle game address
-   * @param _intervalTime Interval time
-   * @param _inPlay Tokens in game
-   * @param _eliminatedTokenCount Number of tokens that should be removed by one perfermUpKeep.
    */
-  function addToBattleQueue(
-    address _gameAddr,
-    uint256 _intervalTime,
-    uint32[] memory _inPlay,
-    uint256 _eliminatedTokenCount
-  ) external onlyOwner {
+  function initializeBattles(address _gameAddr) external onlyOwner {
     BattleInfo memory battle;
     battle.gameAddr = _gameAddr;
+    battle.battleState = BattleState.STANDBY;
+    for (uint256 i = 0; i < tierCount; i++) {
+      battleQueue.push(battle);
+      battleQueueLength++;
+    }
+
+    emit BattlesInitialized();
+  }
+
+  /**
+   * @dev External function to add token ids chosen by users.
+   * @param _battleId Battle Queue Id
+   * @param _tokenIds TokenIds for each tier chosen by users
+   */
+  function addTokenIds(uint256 _battleId, uint32[] memory _tokenIds) external {
+    BattleInfo storage battle = battleQueue[_battleId];
+    for (uint256 i = 0; i < _tokenIds.length; i++) {
+      battle.inPlay.push(uint32(_tokenIds[i]));
+    }
+
+    emit TokenIdsAdded(msg.sender, _battleId, _tokenIds);
+  }
+
+  /**
+   * @dev External function to add battle. This function can be called only by owner.
+   * @param _battleId Battle Queue Id
+   * @param _intervalTime Interval time
+   * @param _eliminatedTokenCount Number of tokens that should be removed by one perfermUpKeep.
+   */
+  function startBattle(
+    uint256 _battleId,
+    uint256 _intervalTime,
+    uint256 _eliminatedTokenCount
+  ) external onlyOwner {
+    BattleInfo storage battle = battleQueue[_battleId];
     battle.intervalTime = _intervalTime;
     battle.lastEliminatedTime = block.timestamp;
-    battle.inPlay = _inPlay;
-    battle.battleState = true;
+    battle.battleState = BattleState.RUNNING;
     battle.eliminatedTokenCount = _eliminatedTokenCount;
 
-    battleQueue.push(battle);
-    battleQueueLength++;
-
-    emit BattleAdded(battle);
+    emit BattleStated(_battleId, battle);
   }
 
   /**
@@ -114,7 +166,7 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
     for (uint256 i = 0; i < battleQueue.length; i++) {
       BattleInfo memory battle = battleQueue[i];
       if (
-        battle.battleState == true &&
+        battle.battleState == BattleState.RUNNING &&
         block.timestamp >= battle.lastEliminatedTime + (battle.intervalTime * 1 minutes)
       ) {
         return (true, abi.encodePacked(i));
@@ -131,10 +183,10 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
     uint256 battleId = bytesToUint256(_performData, 0);
     BattleInfo memory battle = battleQueue[battleId];
 
-    require(battle.battleState, "ChainlinkKeeper: Current battle is finished");
+    require(battle.battleState == BattleState.RUNNING, "Current battle is finished");
     require(
       block.timestamp >= battle.lastEliminatedTime + (battle.intervalTime * 1 minutes),
-      "ChainlinkKeeper: Trigger time is not correct"
+      "Trigger time is not correct"
     );
 
     executeBattle(battleId);
@@ -147,8 +199,8 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
   function executeBattle(uint256 _battleId) internal {
     BattleInfo storage battle = battleQueue[_battleId];
 
-    require(LINK.balanceOf(address(this)) >= fee, "ChainlinkKeeper: Not enough LINK");
-    require(battle.battleState, "ChainlinkKeeper: Current battle is finished");
+    require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK");
+    require(battle.battleState == BattleState.RUNNING, "Current battle is finished");
 
     bytes32 requestId = requestRandomness(keyHash, fee);
     requestToBattle[requestId] = _battleId;
@@ -181,13 +233,13 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
       battle.inPlay[i] = battle.inPlay[battle.inPlay.length - 1];
       battle.inPlay.pop();
 
-      emit Eliminated(battle.gameAddr, tokenId, true);
+      emit Eliminated(battle.gameAddr, tokenId);
     }
 
     if (battle.inPlay.length == 1) {
-      battle.battleState = false;
+      battle.battleState = BattleState.ENDED;
       battle.winnerTokenId = battle.inPlay[0];
-      emit BattleEnded(true, battle.gameAddr, battle.winnerTokenId, false);
+      emit BattleEnded(battle.gameAddr, battle.winnerTokenId, battle.battleState);
     }
   }
 
@@ -216,6 +268,24 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
     battle.eliminatedTokenCount = _eliminatedTokenCount;
 
     emit EliminatedTokenCountSet(_battleId, _eliminatedTokenCount);
+  }
+
+  /**
+   * @dev External function to set prize token for the winner. This function can be called only by owner.
+   * @param _battleId Battle Id
+   * @param _prizeAddr Prize contract address
+   * @param _prizeTokenId Prize token id
+   */
+  function setPrizeToken(
+    uint256 _battleId,
+    address _prizeAddr,
+    uint256 _prizeTokenId
+  ) external onlyOwner {
+    BattleInfo storage battle = battleQueue[_battleId];
+    battle.prizeAddr = _prizeAddr;
+    battle.prizeTokenId = _prizeTokenId;
+
+    emit PrizeTokenSet(_battleId, _prizeAddr, _prizeTokenId);
   }
 
   /**
@@ -252,7 +322,7 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
    */
   function withdrawETH(uint256 _amount) external onlyOwner {
     uint256 balance = address(this).balance;
-    require(_amount <= balance, "ChainlinkKeeper: Out of balance");
+    require(_amount <= balance, "Out of balance");
 
     payable(msg.sender).transfer(_amount);
   }
@@ -266,7 +336,7 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
     IERC20 token = IERC20(_tokenAddr);
 
     uint256 balance = token.balanceOf(address(this));
-    require(_amount <= balance, "ChainlinkKeeper: Out of balance");
+    require(_amount <= balance, "Out of balance");
 
     token.safeTransfer(msg.sender, _amount);
   }
@@ -277,7 +347,7 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
    * @param _start Start index
    */
   function bytesToUint256(bytes memory _bytes, uint256 _start) internal pure returns (uint256) {
-    require(_bytes.length >= _start + 32, "ChainlinkKeeper: toUint256_outOfBounds");
+    require(_bytes.length >= _start + 32, "toUint256_outOfBounds");
     uint256 tempUint;
 
     assembly {
