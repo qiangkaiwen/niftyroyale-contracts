@@ -26,9 +26,6 @@ contract BattleRoyaleRandomPart is ERC721URIStorage, Ownable {
     string prizeTokenURI
   );
 
-  /// @notice Event emitted when interval time set.
-  event IntervalTimeSet(uint256 intervalTime);
-
   /// @notice Event emitted when token price set.
   event PriceSet(uint256 price);
 

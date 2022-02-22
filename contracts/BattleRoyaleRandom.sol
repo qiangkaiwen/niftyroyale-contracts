@@ -42,9 +42,6 @@ contract BattleRoyaleRandom is ERC721URIStorage, Ownable {
   /// @notice Event emitted when prize token uri set.
   event PrizeTokenURISet(string prizeTokenURI);
 
-  /// @notice Event emitted when interval time set.
-  event IntervalTimeSet(uint256 intervalTime);
-
   /// @notice Event emitted when token price set.
   event PriceSet(uint256 price);
 

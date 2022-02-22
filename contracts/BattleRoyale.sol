@@ -21,9 +21,6 @@ contract BattleRoyale is ERC721URIStorage, Ownable {
   /// @notice Event emitted when battle has ended.
   event BattleEnded(address battleAddress, uint256 winnerTokenId, string prizeTokenURI);
 
-  /// @notice Event emitted when interval time set.
-  event IntervalTimeSet(uint256 intervalTime);
-
   /// @notice Event emitted when token price set.
   event PriceSet(uint256 price);
 
