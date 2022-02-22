@@ -45,13 +45,13 @@ contract BattleRoyalePiece is ERC721URIStorage, Ownable {
   /// @notice Event emitted when max supply set.
   event MaxSupplySet(uint256 maxSupply);
 
-  enum BATTLE_STATE {
+  enum BattleState {
     STANDBY,
     RUNNING,
     ENDED
   }
 
-  BATTLE_STATE public battleState;
+  BattleState public battleState;
 
   string public prizeTokenURI;
   string public firstTokenURI;
@@ -84,7 +84,7 @@ contract BattleRoyalePiece is ERC721URIStorage, Ownable {
     string memory _firstTokenURI,
     string memory _secondTokenURI
   ) ERC721(_name, _symbol) {
-    battleState = BATTLE_STATE.STANDBY;
+    battleState = BattleState.STANDBY;
     price = _price;
     unitsPerTransaction = _unitsPerTransaction;
     maxSupply = _maxSupply;
@@ -103,7 +103,7 @@ contract BattleRoyalePiece is ERC721URIStorage, Ownable {
     require(price > 0, "BattleRoyalePiece: Token price is zero");
     require(_type > 0 && _type < 3, "BattleRoyalePiece: Caller didn't choose the token type");
     require(
-      battleState == BATTLE_STATE.STANDBY,
+      battleState == BattleState.STANDBY,
       "BattleRoyalePiece: Current battle state is not ready to purchase tokens"
     );
     require(
@@ -159,7 +159,7 @@ contract BattleRoyalePiece is ERC721URIStorage, Ownable {
       bytes(prizeTokenURI).length > 0 && inPlay.length > 1,
       "BattleRoyalePiece: Tokens in game are not enough to play"
     );
-    battleState = BATTLE_STATE.RUNNING;
+    battleState = BattleState.RUNNING;
 
     emit BattleStarted(address(this), inPlay);
   }
@@ -169,8 +169,8 @@ contract BattleRoyalePiece is ERC721URIStorage, Ownable {
    * @param _winnerTokenId Winner token Id in battle
    */
   function endBattle(uint256 _winnerTokenId) external onlyOwner {
-    require(battleState == BATTLE_STATE.RUNNING, "BattleRoyalePiece: Battle is not started");
-    battleState = BATTLE_STATE.ENDED;
+    require(battleState == BattleState.RUNNING, "BattleRoyalePiece: Battle is not started");
+    battleState = BattleState.ENDED;
 
     _setTokenURI(_winnerTokenId, prizeTokenURI);
 

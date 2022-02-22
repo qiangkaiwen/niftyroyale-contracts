@@ -51,13 +51,13 @@ contract BattleRoyaleRandom is ERC721URIStorage, Ownable {
   /// @notice Event emitted when max supply set.
   event MaxSupplySet(uint256 maxSupply);
 
-  enum BATTLE_STATE {
+  enum BattleState {
     STANDBY,
     RUNNING,
     ENDED
   }
 
-  BATTLE_STATE public battleState;
+  BattleState public battleState;
 
   string public prizeTokenURI;
   string[] public tokenURIs;
@@ -85,7 +85,7 @@ contract BattleRoyaleRandom is ERC721URIStorage, Ownable {
     uint256 _unitsPerTransaction,
     uint256 _maxSupply
   ) ERC721(_name, _symbol) {
-    battleState = BATTLE_STATE.STANDBY;
+    battleState = BattleState.STANDBY;
     price = _price;
     unitsPerTransaction = _unitsPerTransaction;
     maxSupply = _maxSupply;
@@ -99,7 +99,7 @@ contract BattleRoyaleRandom is ERC721URIStorage, Ownable {
    */
   function purchase(uint256 _amount) external payable {
     require(
-      battleState == BATTLE_STATE.STANDBY,
+      battleState == BattleState.STANDBY,
       "BattleRoyaleRandom: Current battle state is not ready to purchase tokens"
     );
     require(
@@ -166,7 +166,7 @@ contract BattleRoyaleRandom is ERC721URIStorage, Ownable {
       bytes(prizeTokenURI).length > 0 && inPlay.length > 1,
       "BattleRoyaleRandom: Tokens in game are not enough to play"
     );
-    battleState = BATTLE_STATE.RUNNING;
+    battleState = BattleState.RUNNING;
 
     emit BattleStarted(address(this), inPlay);
   }
@@ -176,8 +176,8 @@ contract BattleRoyaleRandom is ERC721URIStorage, Ownable {
    * @param _winnerTokenId Winner token Id in battle
    */
   function endBattle(uint256 _winnerTokenId) external onlyOwner {
-    require(battleState == BATTLE_STATE.RUNNING, "BattleRoyaleRandom: Battle is not started");
-    battleState = BATTLE_STATE.ENDED;
+    require(battleState == BattleState.RUNNING, "BattleRoyaleRandom: Battle is not started");
+    battleState = BattleState.ENDED;
 
     _setTokenURI(_winnerTokenId, prizeTokenURI);
 

@@ -35,13 +35,13 @@ contract BattleRoyaleMintingNew is ERC721URIStorage, Ownable {
   /// @notice Event emitted when max supply set.
   event MaxSupplySet(uint256 maxSupply);
 
-  enum BATTLE_STATE {
+  enum BattleState {
     STANDBY,
     RUNNING,
     ENDED
   }
 
-  BATTLE_STATE public battleState;
+  BattleState public battleState;
 
   string public prizeTokenURI;
   string public defaultTokenURI;
@@ -78,7 +78,7 @@ contract BattleRoyaleMintingNew is ERC721URIStorage, Ownable {
     string memory _prizeTokenURI,
     uint256 _startingTime
   ) ERC721(_name, _symbol) {
-    battleState = BATTLE_STATE.STANDBY;
+    battleState = BattleState.STANDBY;
     price = _price;
     unitsPerTransaction = _unitsPerTransaction;
     maxSupply = _maxSupply;
@@ -94,7 +94,7 @@ contract BattleRoyaleMintingNew is ERC721URIStorage, Ownable {
    */
   function purchase(uint256 _amount) external payable {
     require(price > 0, "Token price is zero");
-    require(battleState == BATTLE_STATE.STANDBY, "Not ready to purchase tokens");
+    require(battleState == BattleState.STANDBY, "Not ready to purchase tokens");
     require(maxSupply > 0 && totalSupply < maxSupply, "All NFTs were sold out");
     require(block.timestamp >= startingTime, "Not time to purchase");
 
@@ -138,7 +138,7 @@ contract BattleRoyaleMintingNew is ERC721URIStorage, Ownable {
    */
   function startBattle() external onlyOwner {
     require(bytes(prizeTokenURI).length > 0 && inPlay.length > 1, "Not enough tokens to play");
-    battleState = BATTLE_STATE.RUNNING;
+    battleState = BattleState.RUNNING;
 
     emit BattleStarted(address(this), inPlay);
   }
@@ -148,8 +148,8 @@ contract BattleRoyaleMintingNew is ERC721URIStorage, Ownable {
    * @param _winnerTokenId Winner token Id in battle
    */
   function endBattle(uint256 _winnerTokenId) external onlyOwner {
-    require(battleState == BATTLE_STATE.RUNNING, "Battle is not started");
-    battleState = BATTLE_STATE.ENDED;
+    require(battleState == BattleState.RUNNING, "Battle is not started");
+    battleState = BattleState.ENDED;
 
     uint256 tokenId = totalSupply + 1;
 
