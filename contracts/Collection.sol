@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "erc721a/contracts/ERC721A.sol";
 
-contract GasOptimized is ERC721A, Ownable, ReentrancyGuard {
+contract Collection is ERC721A, Ownable, ReentrancyGuard {
   constructor() ERC721A("niftyroyale", "NIFTYROYALE") {}
 
   uint256 public constant MAX_SUPPLY = 3000;
