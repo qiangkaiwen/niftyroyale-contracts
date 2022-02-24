@@ -4,9 +4,12 @@ pragma solidity ^0.8.6;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "erc721a/contracts/ERC721A.sol";
 
 contract Collection is ERC721A, Ownable, ReentrancyGuard {
+  using Strings for uint256;
+
   constructor() ERC721A("niftyroyale", "NIFTYROYALE") {}
 
   uint256 public constant MAX_SUPPLY = 3000;
@@ -16,9 +19,10 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
 
   string private _baseTokenURI;
 
-  bool public saleIsActive = false;
+  bool public isPublicSaleActive = false;
   bool public isAllowListActive = false;
   bool public isDevAllowListActive = false;
+  bool public isShowMetadataActive = false;
 
   mapping(address => uint8) private _devAllowList;
 
@@ -48,7 +52,7 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
    * Pause sale if active, make active if paused
    */
   function flipSaleState() external onlyOwner {
-    saleIsActive = !saleIsActive;
+    isPublicSaleActive = !isPublicSaleActive;
   }
 
   function flipIsAllowListState() external onlyOwner {
@@ -57,6 +61,10 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
 
   function flipIsDevAllowListState() external onlyOwner {
     isDevAllowListActive = !isDevAllowListActive;
+  }
+
+  function flipIsShowMetadataState() external onlyOwner {
+    isShowMetadataActive = !isShowMetadataActive;
   }
 
   function setDevAllowList(address[] calldata addresses, uint8 numAllowedToMint)
@@ -89,7 +97,7 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
   }
 
   function mint(uint256 _numberOfTokens) external payable nonReentrant {
-    require(saleIsActive, "Sale must be active");
+    require(isPublicSaleActive, "Sale must be active");
     require(_numberOfTokens <= PURCHASE_LIMIT, "Exceeded max token purchase");
     require(totalSupply() + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
     require(PRICE_PER_TOKEN * _numberOfTokens <= msg.value, "Ether value sent is not correct");
@@ -125,6 +133,14 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
 
   function setBaseURI(string calldata baseURI) external onlyOwner {
     _baseTokenURI = baseURI;
+  }
+
+  function tokenURI(uint256 tokenId) public view override(ERC721A) returns (string memory) {
+    require(_exists(tokenId), "Token does not exist");
+    if (isShowMetadataActive) {
+      return string(abi.encodePacked(_baseTokenURI, tokenId.toString()));
+    }
+    return;
   }
 
   function withdraw() external onlyOwner {
