@@ -51,7 +51,7 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
   /*
    * Pause sale if active, make active if paused
    */
-  function flipSaleState() external onlyOwner {
+  function flipIsPublicSaleState() external onlyOwner {
     isPublicSaleActive = !isPublicSaleActive;
   }
 
@@ -85,31 +85,35 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
     payable
     nonReentrant
   {
+    uint256 ts = totalSupply();
     require(isAllowListActive, "Allow list is not active");
     require(_numberOfTokens <= ALLOW_LIST_MAX_MINT, "Exceeded max value to purchase");
-    require(totalSupply() + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
     require(PRICE_PER_TOKEN * _numberOfTokens <= msg.value, "Ether value sent is not enough");
     require(
       _verifyMerkleLeaf(_generateMerkleLeaf(msg.sender), merkleRoot, _merkleProof),
       "You are not in allowlist"
     );
+    require(ts + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
+
     _safeMint(msg.sender, _numberOfTokens);
   }
 
-  function mint(uint256 _numberOfTokens) external payable nonReentrant {
+  function mint(uint8 _numberOfTokens) external payable nonReentrant {
+    uint256 ts = totalSupply();
     require(isPublicSaleActive, "Sale must be active");
     require(_numberOfTokens <= PURCHASE_LIMIT, "Exceeded max token purchase");
-    require(totalSupply() + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
     require(PRICE_PER_TOKEN * _numberOfTokens <= msg.value, "Ether value sent is not correct");
+    require(ts + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
 
     _safeMint(msg.sender, _numberOfTokens);
   }
 
   function reserveNFTs(uint8 _numberOfTokens) external nonReentrant {
+    uint256 ts = totalSupply();
     require(isDevAllowListActive, "Allow list is not active");
     require(_devAllowList[msg.sender] >= 0, "msg.sender is Not in allow list");
     require(_numberOfTokens <= _devAllowList[msg.sender], "Exceeded max token purchase");
-    require(totalSupply() + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
+    require(ts + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
 
     _devAllowList[msg.sender] -= _numberOfTokens;
     _safeMint(msg.sender, _numberOfTokens);
