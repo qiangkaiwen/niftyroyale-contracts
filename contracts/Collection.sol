@@ -32,7 +32,7 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
 
   // create merkle leaf from supplied data
   function _generateMerkleLeaf(address _account) internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked(_account));
+    return keccak256(_account);
   }
 
   // function to verify that the given leaf belongs to a given tree using its root for comparison
