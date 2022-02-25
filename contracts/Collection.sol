@@ -9,7 +9,6 @@ import "erc721a/contracts/ERC721A.sol";
 
 contract Collection is ERC721A, Ownable, ReentrancyGuard {
   using Strings for uint256;
-  using MerkleProof for bytes32[];
 
   constructor() ERC721A("niftyroyale", "NIFTYROYALE") {}
 
@@ -67,27 +66,14 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
     return _devAllowList[addr];
   }
 
-  /**
-   * @dev verification function for merkle root
-   */
-  function isTokenValid(address _to, bytes32[] memory _proof) public view returns (bool) {
-    // construct Merkle tree leaf from the inputs supplied
-    bytes32 leaf = keccak256(abi.encodePacked(_to));
-    // verify the proof supplied, and return the verification result
-    return _proof.verify(merkleRoot, leaf);
-  }
-
-  function mintAllowList(uint8 _numberOfTokens, bytes32[] calldata _merkleProof)
-    external
-    payable
-    nonReentrant
-  {
+  function mintAllowList(uint8 _numberOfTokens, bytes32[] calldata _merkleProof) external payable {
     uint256 ts = totalSupply();
+    bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
 
     require(isAllowListActive, "Allow list is not active");
     require(_numberOfTokens <= ALLOW_LIST_MAX_MINT, "Exceeded max value to purchase");
     require(PRICE_PER_TOKEN * _numberOfTokens <= msg.value, "Ether value sent is not correct");
-    require(isTokenValid(msg.sender, _merkleProof), "invalid merkle proof");
+    require(MerkleProof.verify(_merkleProof, merkleRoot, leaf), "Invalid proof");
     require(ts + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
 
     _safeMint(msg.sender, _numberOfTokens);
