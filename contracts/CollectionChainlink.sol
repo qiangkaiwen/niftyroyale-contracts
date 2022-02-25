@@ -122,6 +122,7 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
    * @param _tokenIds TokenIds for each tier chosen by users
    */
   function addTokenIds(uint256 _battleId, uint32[] memory _tokenIds) external onlyOwner {
+    require(_battleId < battleQueueLength, "Battle id not exist.");
     BattleInfo storage battle = battleQueue[_battleId];
     require(battle.battleState == BattleState.STANDBY, "Battle already started.");
     for (uint256 i = 0; i < _tokenIds.length; i++) {
@@ -136,6 +137,7 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
    * @param _battleId Battle Queue Id
    */
   function startBattle(uint256 _battleId) external onlyOwner {
+    require(_battleId < battleQueueLength, "Battle id not exist.");
     BattleInfo storage battle = battleQueue[_battleId];
     require(battle.battleState == BattleState.STANDBY, "Battle already started.");
 
@@ -243,6 +245,8 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
    * @param _intervalTime New interval time
    */
   function setBattleIntervalTime(uint256 _battleId, uint256 _intervalTime) external onlyOwner {
+    require(_battleId < battleQueueLength, "Battle id not exist.");
+
     BattleInfo storage battle = battleQueue[_battleId];
     battle.intervalTime = _intervalTime;
 
@@ -258,6 +262,8 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
     external
     onlyOwner
   {
+    require(_battleId < battleQueueLength, "Battle id not exist.");
+
     BattleInfo storage battle = battleQueue[_battleId];
     battle.eliminatedTokenCount = _eliminatedTokenCount;
 
