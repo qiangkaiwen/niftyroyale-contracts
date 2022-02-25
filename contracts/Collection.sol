@@ -34,20 +34,6 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
     merkleRoot = _root;
   }
 
-  // create merkle leaf from supplied data
-  function _generateMerkleLeaf(address _account) internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked(_account));
-  }
-
-  // function to verify that the given leaf belongs to a given tree using its root for comparison
-  function _verifyMerkleLeaf(
-    bytes32 _leafNode,
-    bytes32 _merkleRoot,
-    bytes32[] memory _proof
-  ) internal pure returns (bool) {
-    return MerkleProof.verify(_proof, _merkleRoot, _leafNode);
-  }
-
   /*
    * Pause sale if active, make active if paused
    */
@@ -86,13 +72,12 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
     nonReentrant
   {
     uint256 ts = totalSupply();
+    bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+
     require(isAllowListActive, "Allow list is not active");
     require(_numberOfTokens <= ALLOW_LIST_MAX_MINT, "Exceeded max value to purchase");
-    require(PRICE_PER_TOKEN * _numberOfTokens <= msg.value, "Ether value sent is not enough");
-    require(
-      _verifyMerkleLeaf(_generateMerkleLeaf(msg.sender), merkleRoot, _merkleProof),
-      "You are not in allowlist"
-    );
+    require(PRICE_PER_TOKEN * _numberOfTokens <= msg.value, "Ether value sent is not correct");
+    require(MerkleProof.verify(_merkleProof, merkleRoot, leaf), "You are not in allowlist");
     require(ts + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
 
     _safeMint(msg.sender, _numberOfTokens);
@@ -101,7 +86,7 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
   function mint(uint8 _numberOfTokens) external payable nonReentrant {
     uint256 ts = totalSupply();
     require(isPublicSaleActive, "Sale must be active");
-    require(_numberOfTokens <= PURCHASE_LIMIT, "Exceeded max token purchase");
+    require(_numberOfTokens <= PURCHASE_LIMIT, "Exceeded max value to purchase");
     require(PRICE_PER_TOKEN * _numberOfTokens <= msg.value, "Ether value sent is not correct");
     require(ts + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
 
