@@ -159,7 +159,7 @@ contract CollectionChainlink is VRFConsumerBase, Ownable, KeeperCompatibleInterf
     override
     returns (bool, bytes memory)
   {
-    for (uint256 i = 0; i < battleQueue.length; i++) {
+    for (uint256 i = 0; i < battleQueueLength; i++) {
       BattleInfo memory battle = battleQueue[i];
       if (
         battle.battleState == BattleState.RUNNING &&
