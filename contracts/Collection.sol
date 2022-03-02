@@ -12,8 +12,8 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
 
   uint256 public constant MAX_SUPPLY = 3000;
   uint256 public constant PRICE = 0.001 ether;
-  uint256 public constant MAX_PUBLIC_SALE_PER_WALLET = 10;
-  uint256 public constant MAX_PRESALE_PER_WALLET = 10;
+  uint256 public constant MAX_PUBLIC_SALE_PER_WALLET = 5;
+  uint256 public constant MAX_PRESALE_PER_WALLET = 3;
 
   uint256 public immutable maxPublicSaleTx;
   uint256 public immutable maxPresaleTx;
