@@ -11,23 +11,40 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
   using Strings for uint256;
 
   uint256 public constant MAX_SUPPLY = 3000;
-  uint256 public constant PRICE_PER_TOKEN = 0.001 ether;
-  uint256 public constant PURCHASE_LIMIT = 5;
-  uint256 public constant ALLOW_LIST_MAX_MINT = 2;
+  uint256 public constant PRICE = 0.001 ether;
+  uint256 public constant MAX_PUBLIC_SALE_PER_WALLET = 10;
+  uint256 public constant MAX_PRESALE_PER_WALLET = 10;
+
+  uint256 public immutable maxPublicSaleTx;
+  uint256 public immutable maxPresaleTx;
+
+  uint256 public immutable maxSupplyForTeam;
+  uint256 public totalSupplyForTeam;
 
   string private _baseTokenURI;
 
   bool public isPublicSaleActive = false;
-  bool public isAllowListActive = false;
-  bool public isDevAllowListActive = false;
+  bool public isPresaleActive = false;
+  bool public isInternalMintActive = false;
   bool public isShowMetadataActive = false;
 
-  mapping(address => uint8) private _devAllowList;
+  mapping(address => uint256) public presaleCounter;
+  mapping(address => uint256) public publicSaleCounter;
 
   // declare bytes32 variables to store root (a hash)
   bytes32 public merkleRoot;
 
-  constructor() ERC721A("niftyroyale", "NIFTYROYALE") {}
+  constructor(
+    string memory name,
+    string memory symbol,
+    uint256 _maxPublicSaleTx,
+    uint256 _maxPresaleTx,
+    uint256 _maxSupplyForTeam
+  ) ERC721A(name, symbol) {
+    maxPublicSaleTx = _maxPublicSaleTx;
+    maxPresaleTx = _maxPresaleTx;
+    maxSupplyForTeam = _maxSupplyForTeam;
+  }
 
   modifier callerIsUser() {
     require(tx.origin == msg.sender, "The caller is another contract");
@@ -46,71 +63,64 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
     isPublicSaleActive = !isPublicSaleActive;
   }
 
-  function flipIsAllowListState() external onlyOwner {
-    isAllowListActive = !isAllowListActive;
+  function flipIsPresaleState() external onlyOwner {
+    isPresaleActive = !isPresaleActive;
   }
 
-  function flipIsDevAllowListState() external onlyOwner {
-    isDevAllowListActive = !isDevAllowListActive;
+  function flipIsInternalMintState() external onlyOwner {
+    isInternalMintActive = !isInternalMintActive;
   }
 
   function flipIsShowMetadataState() external onlyOwner {
     isShowMetadataActive = !isShowMetadataActive;
   }
 
-  function setDevAllowList(address[] calldata addresses, uint8 numAllowedToMint)
-    external
-    onlyOwner
-  {
-    for (uint256 i = 0; i < addresses.length; i++) {
-      _devAllowList[addresses[i]] = numAllowedToMint;
-    }
+  // Internal for marketing, devs, etc
+  function internalMint(uint256 _quantity, address _to) external onlyOwner nonReentrant {
+    require(totalSupplyForTeam + _quantity <= maxSupplyForTeam, "Exceeded max supply for team");
+    require(totalSupply() + _quantity <= MAX_SUPPLY, "Exceeded max supply");
+
+    _safeMint(_to, _quantity);
+
+    totalSupplyForTeam += _quantity;
   }
 
-  function numAvailableToMintForDev(address addr) public view returns (uint8) {
-    return _devAllowList[addr];
-  }
-
-  function mintAllowList(uint8 _numberOfTokens, bytes32[] calldata _merkleProof)
+  function presaleMint(uint256 _quantity, bytes32[] calldata _merkleProof)
     external
     payable
     callerIsUser
     nonReentrant
   {
-    uint256 ts = totalSupply();
     bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-    uint256 tokenCount = balanceOf(msg.sender);
 
-    require(isAllowListActive, "Allow list is not active");
-    require(MerkleProof.verify(_merkleProof, merkleRoot, leaf), "Invalid proof");
-    require(tokenCount + _numberOfTokens <= ALLOW_LIST_MAX_MINT, "Exceeded max value to purchase");
-    require(PRICE_PER_TOKEN * _numberOfTokens <= msg.value, "Ether value sent is not correct");
-    require(ts + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
+    require(isPresaleActive, "Presale is not active");
+    require(
+      presaleCounter[msg.sender] + _quantity <= MAX_PRESALE_PER_WALLET,
+      "Exceeded max value to purchase"
+    );
+    require(_quantity <= maxPresaleTx, "Exceeds max per transaction");
+    require(totalSupply() + _quantity <= MAX_SUPPLY, "Purchase would exceed max supply");
+    require(PRICE * _quantity <= msg.value, "Incorrect funds");
+    require(MerkleProof.verify(_merkleProof, merkleRoot, leaf), "Invalid merkle proof");
 
-    _safeMint(msg.sender, _numberOfTokens);
+    _safeMint(msg.sender, _quantity);
+
+    presaleCounter[msg.sender] += _quantity;
   }
 
-  function mint(uint8 _numberOfTokens) external payable callerIsUser nonReentrant {
-    uint256 ts = totalSupply();
+  function publicSaleMint(uint256 _quantity) external payable callerIsUser nonReentrant {
+    require(isPublicSaleActive, "Public sale is not active");
+    require(
+      publicSaleCounter[msg.sender] + _quantity <= MAX_PUBLIC_SALE_PER_WALLET,
+      "Exceeded max value to purchase"
+    );
+    require(_quantity <= maxPublicSaleTx, "Exceeds max per transaction");
+    require(totalSupply() + _quantity <= MAX_SUPPLY, "Purchase would exceed max supply");
+    require(PRICE * _quantity <= msg.value, "Incorrect funds");
 
-    require(isPublicSaleActive, "Sale must be active");
-    require(_numberOfTokens <= PURCHASE_LIMIT, "Exceeded max value to purchase");
-    require(PRICE_PER_TOKEN * _numberOfTokens <= msg.value, "Ether value sent is not correct");
-    require(ts + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
+    _safeMint(msg.sender, _quantity);
 
-    _safeMint(msg.sender, _numberOfTokens);
-  }
-
-  function reserveNFTs(uint8 _numberOfTokens) external callerIsUser nonReentrant {
-    uint256 ts = totalSupply();
-
-    require(isDevAllowListActive, "Allow list is not active");
-    require(_devAllowList[msg.sender] > 0, "Not allowed to mint");
-    require(_numberOfTokens <= _devAllowList[msg.sender], "Exceeded allowed token count");
-    require(ts + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max supply");
-
-    _devAllowList[msg.sender] -= _numberOfTokens;
-    _safeMint(msg.sender, _numberOfTokens);
+    publicSaleCounter[msg.sender] += _quantity;
   }
 
   function tokensOfOwner(address _owner) external view returns (uint256[] memory) {
