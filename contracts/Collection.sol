@@ -67,7 +67,7 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
     }
   }
 
-  function numAvailableToMintForDev(address addr) external view returns (uint8) {
+  function numAvailableToMintForDev(address addr) public view returns (uint8) {
     return _devAllowList[addr];
   }
 
@@ -82,9 +82,9 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
     uint256 tokenCount = balanceOf(msg.sender);
 
     require(isAllowListActive, "Allow list is not active");
+    require(MerkleProof.verify(_merkleProof, merkleRoot, leaf), "Invalid proof");
     require(tokenCount + _numberOfTokens <= ALLOW_LIST_MAX_MINT, "Exceeded max value to purchase");
     require(PRICE_PER_TOKEN * _numberOfTokens <= msg.value, "Ether value sent is not correct");
-    require(MerkleProof.verify(_merkleProof, merkleRoot, leaf), "Invalid proof");
     require(ts + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
 
     _safeMint(msg.sender, _numberOfTokens);
@@ -105,9 +105,9 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
     uint256 ts = totalSupply();
 
     require(isDevAllowListActive, "Allow list is not active");
-    require(_devAllowList[msg.sender] >= 0, "msg.sender is Not in allow list");
-    require(_numberOfTokens <= _devAllowList[msg.sender], "Exceeded max token purchase");
-    require(ts + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max tokens");
+    require(_devAllowList[msg.sender] > 0, "Not allowed to mint");
+    require(_numberOfTokens <= _devAllowList[msg.sender], "Exceeded allowed token count");
+    require(ts + _numberOfTokens <= MAX_SUPPLY, "Purchase would exceed max supply");
 
     _devAllowList[msg.sender] -= _numberOfTokens;
     _safeMint(msg.sender, _numberOfTokens);
