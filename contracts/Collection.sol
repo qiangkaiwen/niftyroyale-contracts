@@ -148,7 +148,7 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
     if (isShowMetadataActive) {
       return string(abi.encodePacked(_baseTokenURI, tokenId.toString()));
     }
-    return "Token URI is hidden.";
+    return _baseTokenURI;
   }
 
   function withdraw() external onlyOwner {
