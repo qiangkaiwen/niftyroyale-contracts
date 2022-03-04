@@ -25,8 +25,7 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
 
   bool public isPublicSaleActive = false;
   bool public isPresaleActive = false;
-  bool public isInternalMintActive = false;
-  bool public isShowMetadataActive = false;
+  bool public isRevealActive = false;
 
   mapping(address => uint256) public presaleCounter;
   mapping(address => uint256) public publicSaleCounter;
@@ -65,14 +64,6 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
 
   function flipIsPresaleState() external onlyOwner {
     isPresaleActive = !isPresaleActive;
-  }
-
-  function flipIsInternalMintState() external onlyOwner {
-    isInternalMintActive = !isInternalMintActive;
-  }
-
-  function flipIsShowMetadataState() external onlyOwner {
-    isShowMetadataActive = !isShowMetadataActive;
   }
 
   // Internal for marketing, devs, etc
@@ -139,16 +130,18 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
     return _baseTokenURI;
   }
 
-  function setBaseURI(string calldata baseURI) external onlyOwner {
+  function setBaseURI(string calldata baseURI, bool reveal) external onlyOwner {
     _baseTokenURI = baseURI;
+    if (reveal) {
+      isRevealActive = reveal;
+    }
   }
 
   function tokenURI(uint256 tokenId) public view override(ERC721A) returns (string memory) {
     require(_exists(tokenId), "Token does not exist");
-    if (isShowMetadataActive) {
-      return string(abi.encodePacked(_baseTokenURI, tokenId.toString()));
-    }
-    return _baseTokenURI;
+    if (!isRevealActive) return _baseTokenURI;
+
+    return string(abi.encodePacked(_baseTokenURI, tokenId.toString()));
   }
 
   function withdraw() external onlyOwner {
