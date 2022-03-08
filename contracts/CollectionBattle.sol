@@ -91,22 +91,18 @@ contract CollectionBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface
   /**
    * @dev External function to initialize one battle. Set only battle state as STANDBY.
    * @param _gameAddr Battle game address
-   * @param _intervalTime Interval time
-   * @param _eliminatedTokenCount Number of tokens that should be removed by one perfermUpKeep.
+   * @param _prizeAddr Contract address for prize
+   * @param _prizeTokenId Token Id for prize contract
    */
   function initializeBattle(
     address _gameAddr,
     address _prizeAddr,
-    uint256 _prizeTokenId,
-    uint256 _intervalTime,
-    uint256 _eliminatedTokenCount
+    uint256 _prizeTokenId
   ) external onlyOwner {
     BattleInfo memory battle;
     battle.gameAddr = _gameAddr;
     battle.prizeAddr = _prizeAddr;
     battle.prizeTokenId = _prizeTokenId;
-    battle.intervalTime = _intervalTime;
-    battle.eliminatedTokenCount = _eliminatedTokenCount;
     battle.battleState = BattleState.STANDBY;
 
     battleQueue.push(battle);
@@ -136,11 +132,17 @@ contract CollectionBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface
    * @dev External function to add battle. This function can be called only by owner.
    * @param _battleId Battle Queue Id
    */
-  function startBattle(uint256 _battleId) external onlyOwner {
+  function startBattle(
+    uint256 _battleId,
+    uint256 _intervalTime,
+    uint256 _eliminatedTokenCount
+  ) external onlyOwner {
     require(_battleId < battleQueueLength, "Battle id not exist.");
     BattleInfo storage battle = battleQueue[_battleId];
     require(battle.battleState == BattleState.STANDBY, "Battle already started.");
 
+    battle.intervalTime = _intervalTime;
+    battle.eliminatedTokenCount = _eliminatedTokenCount;
     battle.lastEliminatedTime = block.timestamp;
     battle.battleState = BattleState.RUNNING;
 
