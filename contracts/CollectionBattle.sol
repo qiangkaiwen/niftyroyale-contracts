@@ -34,7 +34,7 @@ contract CollectionBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface
   event TokenIdsAdded(address user, uint256 battleId, uint32[] tokenIds);
 
   /// @notice Event emitted when battle started.
-  event BattleStated(uint256 battleId, BattleInfo battle);
+  event BattleStarted(uint256 battleId, BattleInfo battle);
 
   enum BattleState {
     STANDBY,
@@ -144,7 +144,7 @@ contract CollectionBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface
     battle.lastEliminatedTime = block.timestamp;
     battle.battleState = BattleState.RUNNING;
 
-    emit BattleStated(_battleId, battle);
+    emit BattleStarted(_battleId, battle);
   }
 
   /**
