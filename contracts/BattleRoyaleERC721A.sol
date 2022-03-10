@@ -3,36 +3,55 @@ pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "erc721a/contracts/ERC721A.sol";
 
-contract Collection is ERC721A, Ownable, ReentrancyGuard {
+contract BattleRoyaleERC721A is ERC721A, Ownable, ReentrancyGuard {
   using Strings for uint256;
 
   /// @notice Event emitted when user minted tokens.
   event Minted(address user, uint256 quantity, uint256 totalSupply);
 
-  uint256 public immutable maxTokensPerTx;
   uint256 public immutable maxSupply;
   uint256 public immutable price;
-  uint256 public immutable startingTime;
+  uint256 public immutable maxPubTokensPerWallet;
+  uint256 public immutable maxPreTokensPerWallet;
+  uint256 public immutable maxPubTokensPerTx;
+  uint256 public immutable maxPreTokensPerTx;
+  uint256 public immutable maxSupplyForTeam;
+  uint256 public totalSupplyForTeam;
 
   string private _baseTokenURI;
 
-  bool public isSaleActive = false;
+  bool public isPublicSaleActive = false;
+  bool public isPresaleActive = false;
+  bool public isRevealActive = false;
+
+  mapping(address => uint256) public presaleCounter;
+  mapping(address => uint256) public publicSaleCounter;
+
+  // declare bytes32 variables to store root (a hash)
+  bytes32 public merkleRoot;
 
   constructor(
     string memory name,
     string memory symbol,
-    uint256 _maxTokensPerTx,
+    uint256 _maxPubTokensPerTx,
+    uint256 _maxPreTokensPerTx,
+    uint256 _maxSupplyForTeam,
     uint256 _maxSupply,
     uint256 _price,
-    uint256 _startingTime
+    uint256 _maxPubTokensPerWallet,
+    uint256 _maxPreTokensPerWallet
   ) ERC721A(name, symbol) {
-    maxTokensPerTx = _maxTokensPerTx;
+    maxPubTokensPerTx = _maxPubTokensPerTx;
+    maxPreTokensPerTx = _maxPreTokensPerTx;
+    maxSupplyForTeam = _maxSupplyForTeam;
     maxSupply = _maxSupply;
     price = _price;
-    startingTime = _startingTime;
+    maxPubTokensPerWallet = _maxPubTokensPerWallet;
+    maxPreTokensPerWallet = _maxPreTokensPerWallet;
   }
 
   modifier callerIsUser() {
@@ -40,26 +59,72 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
     _;
   }
 
+  // function to set the root of Merkle Tree
+  function setMerkleRoot(bytes32 _root) external onlyOwner {
+    merkleRoot = _root;
+  }
+
   /*
    * Pause sale if active, make active if paused
    */
-  function flipIsSaleState() external onlyOwner {
-    isSaleActive = !isSaleActive;
+  function flipIsPublicSaleState() external onlyOwner {
+    isPublicSaleActive = !isPublicSaleActive;
   }
 
-  // Prize minting at the first time
-  function prizeMint() external onlyOwner nonReentrant {
-    _safeMint(msg.sender, 1);
+  function flipIsPresaleState() external onlyOwner {
+    isPresaleActive = !isPresaleActive;
   }
 
-  function mint(uint256 _quantity) external payable callerIsUser nonReentrant {
-    require(isSaleActive, "Sale is not active");
-    require(block.timestamp >= startingTime, "Not a time to purchase");
-    require(_quantity <= maxTokensPerTx, "Exceeds max per transaction");
+  // Internal for marketing, devs, etc
+  function internalMint(uint256 _quantity, address _to) external onlyOwner nonReentrant {
+    require(totalSupplyForTeam + _quantity <= maxSupplyForTeam, "Exceeded max supply for team");
+    require(totalSupply() + _quantity <= maxSupply, "Exceeded max supply");
+
+    _safeMint(_to, _quantity);
+
+    totalSupplyForTeam += _quantity;
+
+    emit Minted(_to, _quantity, totalSupply());
+  }
+
+  function presaleMint(uint256 _quantity, bytes32[] calldata _merkleProof)
+    external
+    payable
+    callerIsUser
+    nonReentrant
+  {
+    bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+
+    require(isPresaleActive, "Presale is not active");
+    require(
+      presaleCounter[msg.sender] + _quantity <= maxPreTokensPerWallet,
+      "Exceeded max value to purchase"
+    );
+    require(_quantity <= maxPreTokensPerTx, "Exceeds max per transaction");
+    require(totalSupply() + _quantity <= maxSupply, "Purchase would exceed max supply");
+    require(price * _quantity <= msg.value, "Incorrect funds");
+    require(MerkleProof.verify(_merkleProof, merkleRoot, leaf), "Invalid merkle proof");
+
+    _safeMint(msg.sender, _quantity);
+
+    presaleCounter[msg.sender] += _quantity;
+
+    emit Minted(msg.sender, _quantity, totalSupply());
+  }
+
+  function publicSaleMint(uint256 _quantity) external payable callerIsUser nonReentrant {
+    require(isPublicSaleActive, "Public sale is not active");
+    require(
+      publicSaleCounter[msg.sender] + _quantity <= maxPubTokensPerWallet,
+      "Exceeded max value to purchase"
+    );
+    require(_quantity <= maxPubTokensPerTx, "Exceeds max per transaction");
     require(totalSupply() + _quantity <= maxSupply, "Purchase would exceed max supply");
     require(price * _quantity <= msg.value, "Incorrect funds");
 
     _safeMint(msg.sender, _quantity);
+
+    publicSaleCounter[msg.sender] += _quantity;
 
     emit Minted(msg.sender, _quantity, totalSupply());
   }
@@ -80,8 +145,18 @@ contract Collection is ERC721A, Ownable, ReentrancyGuard {
     return _baseTokenURI;
   }
 
-  function setBaseURI(string calldata baseURI) external onlyOwner {
+  function setBaseURI(string calldata baseURI, bool reveal) external onlyOwner {
     _baseTokenURI = baseURI;
+    if (reveal) {
+      isRevealActive = reveal;
+    }
+  }
+
+  function tokenURI(uint256 tokenId) public view override(ERC721A) returns (string memory) {
+    require(_exists(tokenId), "Token does not exist");
+    if (!isRevealActive) return _baseTokenURI;
+
+    return string(abi.encodePacked(_baseTokenURI, tokenId.toString()));
   }
 
   function withdraw() external onlyOwner {
