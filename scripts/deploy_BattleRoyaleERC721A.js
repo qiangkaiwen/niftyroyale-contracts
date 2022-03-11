@@ -14,7 +14,7 @@ async function main() {
     "TVNRNB",
     5,
     3,
-    100,
+    10,
     30,
     BigNumber.from("20000000000000").toBigInt(),
     10,
