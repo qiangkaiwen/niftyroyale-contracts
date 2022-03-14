@@ -19,10 +19,10 @@ contract CollectionBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface
   event BattleExecuted(uint256 battleId, bytes32 requestId);
 
   /// @notice Event emitted when one nft is eliminated.
-  event Eliminated(address gameAddr, uint256 tokenId);
+  event Eliminated(address gameAddr, uint256 tokenId, uint256 battleId);
 
   /// @notice Event emitted when winner is set.
-  event BattleEnded(address gameAddr, uint256 winnerTokenId, BattleState battleState);
+  event BattleEnded(address gameAddr, uint256 winnerTokenId);
 
   /// @notice Event emitted when interval time is set.
   event BattleIntervalTimeSet(uint256 battleId, uint256 intervalTime);
@@ -231,13 +231,13 @@ contract CollectionBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface
       battle.inPlay[i] = battle.inPlay[battle.inPlay.length - 1];
       battle.inPlay.pop();
 
-      emit Eliminated(battle.gameAddr, tokenId);
+      emit Eliminated(battle.gameAddr, tokenId, _battleId);
     }
 
     if (battle.inPlay.length == 1) {
       battle.battleState = BattleState.ENDED;
       battle.winnerTokenId = battle.inPlay[0];
-      emit BattleEnded(battle.gameAddr, battle.winnerTokenId, battle.battleState);
+      emit BattleEnded(battle.gameAddr, battle.winnerTokenId);
     }
   }
 
