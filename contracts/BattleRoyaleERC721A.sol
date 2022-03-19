@@ -12,6 +12,7 @@ contract BattleRoyaleERC721A is ERC721A, Ownable, ReentrancyGuard {
 
   /// @notice Event emitted when user minted tokens.
   event Minted(address user, uint256 quantity, uint256 totalSupply);
+  event IsPublicSaleActiveSet(bool state);
 
   uint256 public immutable maxSupply;
   uint256 public immutable price;
@@ -69,6 +70,8 @@ contract BattleRoyaleERC721A is ERC721A, Ownable, ReentrancyGuard {
    */
   function flipIsPublicSaleState() external onlyOwner {
     isPublicSaleActive = !isPublicSaleActive;
+
+    emit IsPublicSaleActiveSet(isPublicSaleActive);
   }
 
   function flipIsPresaleState() external onlyOwner {
