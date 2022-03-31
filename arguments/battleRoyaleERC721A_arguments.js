@@ -1,11 +1,8 @@
 const { BigNumber } = require("ethers")
 
-// max token limit per wallet in public sale
-// max token limit per wallet in presale
-// max token numbers for team
 module.exports = [
-  "Nifty Royale X Tester: Nifty Royale NFT BattleRoyaleERC721A",
-  "TVNRNB",
+  "Nifty Royale X Tester: ERC721A Test",
+  "TVNRET",
   5,
   3,
   10,

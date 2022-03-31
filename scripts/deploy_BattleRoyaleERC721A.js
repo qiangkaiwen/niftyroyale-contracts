@@ -10,8 +10,8 @@ async function main() {
   const BattleRoyaleERC721A = await hre.ethers.getContractFactory("BattleRoyaleERC721A")
 
   const battleRoyaleERC721A = await BattleRoyaleERC721A.deploy(
-    "Nifty Royale X Tester: Nifty Royale NFT BattleRoyaleERC721A",
-    "TVNRNB",
+    "Nifty Royale X Tester: ERC721A Test",
+    "TVNRET",
     5,
     3,
     10,
