@@ -215,24 +215,17 @@ contract CollectionBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface
   function fulfillRandomness(bytes32 _requestId, uint256 _randomness) internal override {
     uint256 _battleId = requestToBattle[_requestId];
     BattleInfo storage battle = battleQueue[_battleId];
-    uint256 eliminatedTokenCount = battle.eliminatedTokenCount;
 
-    if (eliminatedTokenCount >= battle.inPlay.length) {
-      eliminatedTokenCount = battle.inPlay.length - 1;
-    }
+    uint256 index = uint256(keccak256(abi.encode(_randomness, block.timestamp))) %
+      battle.inPlay.length;
 
-    for (uint256 index = 0; index < eliminatedTokenCount; index++) {
-      uint256 i = uint256(keccak256(abi.encode(_randomness, index, block.timestamp))) %
-        battle.inPlay.length;
+    uint32 tokenId = battle.inPlay[index];
 
-      uint32 tokenId = battle.inPlay[i];
+    battle.outOfPlay.push(tokenId);
+    battle.inPlay[index] = battle.inPlay[battle.inPlay.length - 1];
+    battle.inPlay.pop();
 
-      battle.outOfPlay.push(tokenId);
-      battle.inPlay[i] = battle.inPlay[battle.inPlay.length - 1];
-      battle.inPlay.pop();
-
-      emit Eliminated(battle.gameAddr, tokenId, _battleId);
-    }
+    emit Eliminated(battle.gameAddr, tokenId, _battleId);
 
     if (battle.inPlay.length == 1) {
       battle.battleState = BattleState.ENDED;

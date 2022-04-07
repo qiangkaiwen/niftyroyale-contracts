@@ -14,14 +14,15 @@ contract BattleRoyaleERC721A is ERC721A, Ownable, ReentrancyGuard {
   event Minted(address user, uint256 quantity, uint256 totalSupply);
   event IsPublicSaleActiveSet(bool state);
   event IsPresaleActiveSet(bool state);
+  event PriceSet(uint256 price);
 
   uint256 public immutable maxSupply;
-  uint256 public immutable price;
   uint256 public immutable maxPubTokensPerWallet;
   uint256 public immutable maxPreTokensPerWallet;
   uint256 public immutable maxPubTokensPerTx;
   uint256 public immutable maxPreTokensPerTx;
   uint256 public immutable maxSupplyForTeam;
+  uint256 public price;
   uint256 public totalSupplyForTeam;
 
   string private _baseTokenURI;
@@ -163,6 +164,12 @@ contract BattleRoyaleERC721A is ERC721A, Ownable, ReentrancyGuard {
     if (!isRevealActive) return _baseTokenURI;
 
     return string(abi.encodePacked(_baseTokenURI, tokenId.toString()));
+  }
+
+  function setPrice(uint256 _price) external onlyOwner {
+    price = _price;
+
+    emit PriceSet(price);
   }
 
   function withdraw() external onlyOwner {
