@@ -121,9 +121,7 @@ contract CollectionBattle is VRFConsumerBase, Ownable, KeeperCompatibleInterface
     require(_battleId < battleQueueLength, "Battle id not exist.");
     BattleInfo storage battle = battleQueue[_battleId];
     require(battle.battleState == BattleState.STANDBY, "Battle already started.");
-    for (uint256 i = 0; i < _tokenIds.length; i++) {
-      battle.inPlay.push(uint32(_tokenIds[i]));
-    }
+    battle.inPlay = _tokenIds;
 
     emit TokenIdsAdded(msg.sender, _battleId, _tokenIds);
   }
